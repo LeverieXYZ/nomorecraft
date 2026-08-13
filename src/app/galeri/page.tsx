@@ -151,7 +151,7 @@ export default function GaleriPage() {
                       alt={work.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 pointer-events-none">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/90 dark:bg-zinc-900/90 text-rose-600 dark:text-rose-400 backdrop-blur-md">
                         {work.categoryName}
                       </span>
@@ -162,7 +162,7 @@ export default function GaleriPage() {
                       )}
                     </div>
                     {work.isSold && (
-                      <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold bg-zinc-900/80 text-white backdrop-blur-md">
+                      <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold bg-zinc-900/80 text-white backdrop-blur-md pointer-events-none">
                         Sold Out
                       </span>
                     )}
@@ -173,10 +173,11 @@ export default function GaleriPage() {
                           e.stopPropagation();
                           setActiveModalWork(work);
                         }}
-                        className="p-3 rounded-full bg-white/90 text-zinc-900 shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                        className="p-3.5 rounded-full bg-white text-zinc-900 shadow-xl hover:scale-115 transition-transform cursor-pointer flex items-center gap-1.5 font-bold text-xs"
                         title="Lihat Detail Karya"
                       >
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-5 h-5 text-rose-600" />
+                        <span>Lihat Detail</span>
                       </button>
                     </div>
                   </div>
@@ -223,10 +224,10 @@ export default function GaleriPage() {
         )}
       </section>
 
-      {/* Modal Detail Karya */}
+      {/* Modal Detail Karya (High Z-Index z-[9999]) */}
       {activeModalWork && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md cursor-pointer animate-fade-in"
           onClick={() => setActiveModalWork(null)}
         >
           <div
@@ -236,7 +237,7 @@ export default function GaleriPage() {
             <button
               type="button"
               onClick={() => setActiveModalWork(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors"
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors shadow-md"
             >
               <X className="w-5 h-5" />
             </button>

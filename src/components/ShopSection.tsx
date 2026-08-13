@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
-import { MOCK_SHOP_PRODUCTS, MOCK_SHOP_LINKS } from "@/data/mockData";
-import { ShoppingBag, ExternalLink, ShieldCheck, Truck, Clock, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { MOCK_SHOP_PRODUCTS, MOCK_SHOP_LINKS, ShopProduct } from "@/data/mockData";
+import { ShoppingBag, ExternalLink, ShoppingCart, Sparkles, Eye, X } from "lucide-react";
 
 export default function ShopSection() {
+  const [activeModalProduct, setActiveModalProduct] = useState<ShopProduct | null>(null);
+
   return (
     <section id="belanja" className="py-20 bg-white dark:bg-zinc-950 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -93,31 +95,53 @@ export default function ShopSection() {
             {MOCK_SHOP_PRODUCTS.map((prod) => (
               <div
                 key={prod.id}
-                className="bg-white dark:bg-zinc-900 rounded-3xl p-5 border border-rose-100 dark:border-zinc-800 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-lg transition-all"
+                onClick={() => setActiveModalProduct(prod)}
+                className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl p-5 border border-rose-100 dark:border-zinc-800 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-lg transition-all"
               >
                 <div className="space-y-3">
                   <div className="aspect-square rounded-2xl overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
                     <img
                       src={prod.imageUrl}
                       alt={prod.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <span
-                      className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold text-white backdrop-blur-md ${
+                      className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold text-white backdrop-blur-md z-10 ${
                         prod.stockStatus === "Ready Stock" ? "bg-emerald-500" : "bg-amber-500"
                       }`}
                     >
                       {prod.stockStatus}
                     </span>
+
+                    {/* Quick Action Eye Icon Overlay */}
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveModalProduct(prod);
+                        }}
+                        className="p-3.5 rounded-full bg-white text-zinc-900 shadow-xl hover:scale-115 transition-transform cursor-pointer flex items-center gap-1.5 font-bold text-xs"
+                        title="Lihat Detail Produk"
+                      >
+                        <Eye className="w-5 h-5 text-rose-600" />
+                        <span>Lihat Detail</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <h4 className="text-base font-bold text-zinc-900 dark:text-white">{prod.name}</h4>
+                  <h4 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-rose-600 transition-colors">
+                    {prod.name}
+                  </h4>
                   <span className="text-lg font-extrabold text-rose-600 dark:text-rose-400 block">
                     {prod.price}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-rose-50 dark:border-zinc-800">
+                <div
+                  className="grid grid-cols-2 gap-2 pt-2 border-t border-rose-50 dark:border-zinc-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <a
                     href={prod.shopeeUrl}
                     target="_blank"
@@ -174,6 +198,69 @@ export default function ShopSection() {
         </div>
 
       </div>
+
+      {/* Modal Detail Produk (High Z-Index z-[9999]) */}
+      {activeModalProduct && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md cursor-pointer animate-fade-in"
+          onClick={() => setActiveModalProduct(null)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setActiveModalProduct(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors shadow-md"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="aspect-square bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
+                <img
+                  src={activeModalProduct.imageUrl}
+                  alt={activeModalProduct.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-6 flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                    {activeModalProduct.stockStatus}
+                  </span>
+                  <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{activeModalProduct.name}</h3>
+                  <div>
+                    <span className="text-xs text-zinc-400 block">Harga</span>
+                    <span className="text-2xl font-extrabold text-rose-600 dark:text-rose-400">{activeModalProduct.price}</span>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4 border-t border-rose-100 dark:border-zinc-800">
+                  <a
+                    href={activeModalProduct.shopeeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-colors"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Beli di Shopee</span>
+                    <ExternalLink className="w-3.5 h-3.5 ml-auto" />
+                  </a>
+                  <a
+                    href={activeModalProduct.tiktokshopUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-700 transition-colors"
+                  >
+                    <span>Beli di TikTok Shop</span>
+                    <ExternalLink className="w-3.5 h-3.5 ml-auto" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
