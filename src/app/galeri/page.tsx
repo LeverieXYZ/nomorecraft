@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { MOCK_CATEGORIES, Work } from "@/data/mockData";
 import { getStoredWorks } from "@/utils/worksStore";
 import { Sparkles, Search, ShoppingCart, ExternalLink, Eye, Share2, Check, X, Filter } from "lucide-react";
+import ModalPortal from "@/components/ModalPortal";
 
 export default function GaleriPage() {
   const [works, setWorks] = useState<Work[]>([]);
@@ -224,68 +225,70 @@ export default function GaleriPage() {
         )}
       </section>
 
-      {/* Modal Detail Karya (High Z-Index z-[9999]) */}
+      {/* Modal Detail Karya (Rendered via ModalPortal to document.body) */}
       {activeModalWork && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md cursor-pointer animate-fade-in"
-          onClick={() => setActiveModalWork(null)}
-        >
+        <ModalPortal>
           <div
-            className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative cursor-default"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md cursor-pointer animate-fade-in"
+            onClick={() => setActiveModalWork(null)}
           >
-            <button
-              type="button"
-              onClick={() => setActiveModalWork(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors shadow-md"
+            <div
+              className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative cursor-default"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="aspect-[4/3] bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
-                <img
-                  src={activeModalWork.imageUrl}
-                  alt={activeModalWork.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-6 flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-300">
-                    {activeModalWork.categoryName}
-                  </span>
-                  <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{activeModalWork.title}</h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300">{activeModalWork.description}</p>
-                  <div>
-                    <span className="text-xs text-zinc-400 block">Harga</span>
-                    <span className="text-2xl font-extrabold text-rose-600 dark:text-rose-400">{activeModalWork.price}</span>
-                  </div>
+              <button
+                type="button"
+                onClick={() => setActiveModalWork(null)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors shadow-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="aspect-[4/3] bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
+                  <img
+                    src={activeModalWork.imageUrl}
+                    alt={activeModalWork.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="space-y-2 pt-4 border-t border-rose-100 dark:border-zinc-800">
-                  <a
-                    href={activeModalWork.shopeeUrl || activeModalWork.buyLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-colors"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Beli di Shopee</span>
-                    <ExternalLink className="w-3.5 h-3.5 ml-auto" />
-                  </a>
-                  <a
-                    href={activeModalWork.tiktokShopUrl || "https://tiktok.com"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-700 transition-colors"
-                  >
-                    <span>Beli di TikTok Shop</span>
-                    <ExternalLink className="w-3.5 h-3.5 ml-auto" />
-                  </a>
+                <div className="p-6 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-300">
+                      {activeModalWork.categoryName}
+                    </span>
+                    <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{activeModalWork.title}</h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">{activeModalWork.description}</p>
+                    <div>
+                      <span className="text-xs text-zinc-400 block">Harga</span>
+                      <span className="text-2xl font-extrabold text-rose-600 dark:text-rose-400">{activeModalWork.price}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-4 border-t border-rose-100 dark:border-zinc-800">
+                    <a
+                      href={activeModalWork.shopeeUrl || activeModalWork.buyLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-colors"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Beli di Shopee</span>
+                      <ExternalLink className="w-3.5 h-3.5 ml-auto" />
+                    </a>
+                    <a
+                      href={activeModalWork.tiktokShopUrl || "https://tiktok.com"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-700 transition-colors"
+                    >
+                      <span>Beli di TikTok Shop</span>
+                      <ExternalLink className="w-3.5 h-3.5 ml-auto" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       <Footer />
