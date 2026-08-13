@@ -69,7 +69,7 @@ export default function AdminKelolaGaleriPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSaveWork = (e: React.FormEvent) => {
+  const handleSaveWork = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !imageUrl) return;
 
@@ -78,25 +78,34 @@ export default function AdminKelolaGaleriPage() {
     let updatedList: Work[];
     if (editingWork) {
       // UPDATE existing work
-      updatedList = works.map((w) =>
-        w.id === editingWork.id
-          ? {
-              ...w,
-              title,
-              categoryId: Number(categoryId),
-              categoryName: cat?.name || "Nail Art",
-              price,
-              imageUrl,
-              description,
-              shopeeUrl,
-              tiktokShopUrl,
-              buyLink: shopeeUrl,
-              isFeatured,
-              isSold,
-            }
-          : w
-      );
-      setSavedSuccess("Harga/detail karya berhasil diperbarui!");
+      const updatedWork: Work = {
+        ...editingWork,
+        title,
+        categoryId: Number(categoryId),
+        categoryName: cat?.name || "Nail Art",
+        price,
+        imageUrl,
+        description,
+        shopeeUrl,
+        tiktokShopUrl,
+        buyLink: shopeeUrl,
+        isFeatured,
+        isSold,
+      };
+
+      updatedList = works.map((w) => (w.id === editingWork.id ? updatedWork : w));
+      setSavedSuccess("Detail karya berhasil diperbarui ke database!");
+
+      // Call database API
+      try {
+        await fetch("/api/cms/galeri", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedWork),
+        });
+      } catch (err) {
+        console.error("Failed to update work in database:", err);
+      }
     } else {
       // CREATE new work
       const newWork: Work = {
@@ -115,7 +124,18 @@ export default function AdminKelolaGaleriPage() {
         createdAt: new Date().toISOString().split("T")[0],
       };
       updatedList = [newWork, ...works];
-      setSavedSuccess("Karya baru berhasil ditambahkan!");
+      setSavedSuccess("Karya baru berhasil disimpan ke database!");
+
+      // Call database API
+      try {
+        await fetch("/api/cms/galeri", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newWork),
+        });
+      } catch (err) {
+        console.error("Failed to insert work into database:", err);
+      }
     }
 
     setWorks(updatedList);
@@ -124,12 +144,22 @@ export default function AdminKelolaGaleriPage() {
     setTimeout(() => setSavedSuccess(null), 3000);
   };
 
-  const handleDeleteWork = (id: number) => {
+  const handleDeleteWork = async (id: number) => {
     if (confirm("Apakah Anda yakin ingin menghapus karya ini dari galeri?")) {
       const updatedList = works.filter((w) => w.id !== id);
       setWorks(updatedList);
       saveStoredWorks(updatedList);
-      setSavedSuccess("Karya telah dihapus.");
+
+      // Delete from database
+      try {
+        await fetch(`/api/cms/galeri?id=${id}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.error("Failed to delete work from database:", err);
+      }
+
+      setSavedSuccess("Karya telah dihapus dari database.");
       setTimeout(() => setSavedSuccess(null), 3000);
     }
   };
@@ -330,7 +360,7 @@ export default function AdminKelolaGaleriPage() {
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
             >
               {editingWork ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              <span>{editingWork ? "Simpan Perubahan" : "Tambah Karya"}</span>
+              <span>{editingWork ? "Simpan ke Database" : "Tambah Karya Ke Database"}</span>
             </button>
           </div>
         </form>

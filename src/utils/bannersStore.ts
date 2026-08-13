@@ -29,10 +29,11 @@ export function getStoredBanners(): HeroBanner[] {
 export function saveStoredBanners(banners: HeroBanner[]): void {
   if (typeof window === "undefined") return;
   try {
+    // 1. Save to Local Storage + Trigger Event
     localStorage.setItem(BANNERS_STORAGE_KEY, JSON.stringify(banners));
     window.dispatchEvent(new Event("nomorecraft_banners_updated"));
   } catch (err) {
-    console.error("Failed to save banners:", err);
+    console.error("Failed to save banners to localStorage:", err);
   }
 }
 
@@ -63,8 +64,22 @@ export function getStoredHeroText(): HeroTextSettings {
 export function saveStoredHeroText(heroText: HeroTextSettings): void {
   if (typeof window === "undefined") return;
   try {
+    // 1. Save to Local Storage + Trigger Event
     localStorage.setItem(HERO_TEXT_STORAGE_KEY, JSON.stringify(heroText));
     window.dispatchEvent(new Event("nomorecraft_hero_text_updated"));
+
+    // 2. Persist to Database API (SQLite / Supabase)
+    fetch("/api/cms/beranda", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "UPDATE_SETTINGS",
+        data: {
+          heroTitle: heroText.title,
+          heroSubtitle: heroText.subtitle,
+        },
+      }),
+    }).catch((err) => console.error("Failed to sync hero text to database:", err));
   } catch (err) {
     console.error("Failed to save hero text:", err);
   }

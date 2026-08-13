@@ -18,7 +18,6 @@ import {
   Tag as TagIcon,
   Edit3,
   X,
-  Sparkles,
   Link2,
 } from "lucide-react";
 import ModalPortal from "@/components/ModalPortal";
@@ -57,41 +56,79 @@ export default function AdminKelolaBerandaPage() {
     setHeroSubtitle(textData.subtitle);
 
     setBanners(getStoredBanners());
+
+    // Sync from database API on mount if available
+    fetch("/api/cms/beranda")
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          if (resData.settings) {
+            setHeroTitle(resData.settings.heroTitle || textData.title);
+            setHeroSubtitle(resData.settings.heroSubtitle || textData.subtitle);
+          }
+          if (Array.isArray(resData.banners) && resData.banners.length > 0) {
+            const mappedBanners: HeroBanner[] = resData.banners.map((b: any) => ({
+              id: b.id,
+              title: b.title,
+              subtitle: b.subtitle,
+              imageUrl: b.imageUrl || b.image_url,
+              buttonText: b.buttonText || b.button_text || "Lihat Detail",
+              buttonLink: b.buttonLink || b.button_link || "#galeri",
+              isActive: Boolean(b.isActive ?? b.is_active ?? 1),
+              badgeText: b.badgeText || b.badge_text || "Promo ✨",
+              tag: b.badgeText || b.badge_text || "Promo ✨",
+            }));
+            setBanners(mappedBanners);
+            saveStoredBanners(mappedBanners);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  const handleSaveHero = (e: React.FormEvent) => {
+  const handleSaveHero = async (e: React.FormEvent) => {
     e.preventDefault();
     saveStoredHeroText({
       title: heroTitle,
       subtitle: heroSubtitle,
     });
+
     setSavedHero(true);
     setTimeout(() => setSavedHero(false), 3000);
   };
 
-  const handleAddBanner = (e: React.FormEvent) => {
+  const handleAddBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle || !newImageUrl) return;
 
     const tagText = newTag.trim() || "Promo Spesial ✨";
 
-    const updatedBanners: HeroBanner[] = [
-      {
-        id: Date.now(),
-        title: newTitle,
-        subtitle: newSubtitle,
-        imageUrl: newImageUrl,
-        buttonText: newButtonText || "Lihat Detail",
-        buttonLink: newButtonLink || "#galeri",
-        isActive: true,
-        badgeText: tagText,
-        tag: tagText,
-      },
-      ...banners,
-    ];
+    const newBannerObj: HeroBanner = {
+      id: Date.now(),
+      title: newTitle,
+      subtitle: newSubtitle,
+      imageUrl: newImageUrl,
+      buttonText: newButtonText || "Lihat Detail",
+      buttonLink: newButtonLink || "#galeri",
+      isActive: true,
+      badgeText: tagText,
+      tag: tagText,
+    };
 
+    const updatedBanners = [newBannerObj, ...banners];
     setBanners(updatedBanners);
     saveStoredBanners(updatedBanners);
+
+    // Save to database
+    try {
+      await fetch("/api/cms/beranda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBannerObj),
+      });
+    } catch (err) {
+      console.error("Failed to insert banner into database:", err);
+    }
 
     setNewTitle("");
     setNewSubtitle("");
@@ -108,7 +145,7 @@ export default function AdminKelolaBerandaPage() {
     setEditingBanner({ ...banner });
   };
 
-  const handleSaveEditedBanner = (e: React.FormEvent) => {
+  const handleSaveEditedBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBanner) return;
 
@@ -123,17 +160,40 @@ export default function AdminKelolaBerandaPage() {
 
     setBanners(updatedBanners);
     saveStoredBanners(updatedBanners);
-    setEditingBanner(null);
 
+    // Save to database
+    try {
+      await fetch("/api/cms/beranda", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "UPDATE_BANNER",
+          data: editingBanner,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to update banner in database:", err);
+    }
+
+    setEditingBanner(null);
     setSavedBanner(true);
     setTimeout(() => setSavedBanner(false), 3000);
   };
 
-  const handleDeleteBanner = (id: number) => {
+  const handleDeleteBanner = async (id: number) => {
     if (confirm("Apakah Anda yakin ingin menghapus banner ini?")) {
       const updated = banners.filter((b) => b.id !== id);
       setBanners(updated);
       saveStoredBanners(updated);
+
+      // Delete from database
+      try {
+        await fetch(`/api/cms/beranda?id=${id}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.error("Failed to delete banner from database:", err);
+      }
     }
   };
 
@@ -153,7 +213,7 @@ export default function AdminKelolaBerandaPage() {
           {(savedHero || savedBanner) && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Data Berhasil Disimpan & Diperbarui!</span>
+              <span>Data Berhasil Disimpan ke Database & Local Storage!</span>
             </div>
           )}
         </div>
@@ -166,7 +226,7 @@ export default function AdminKelolaBerandaPage() {
               <span>Teks Hero Utama Beranda (Headline)</span>
             </h2>
             <span className="text-xs text-rose-400 font-semibold bg-rose-950/60 px-3 py-1 rounded-full border border-rose-800/40">
-              Tersimpan Otomatis saat di-Submit
+              Tersimpan ke Database (SQLite / Supabase)
             </span>
           </div>
 
@@ -493,7 +553,7 @@ export default function AdminKelolaBerandaPage() {
                     className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
                   >
                     <Save className="w-4 h-4" />
-                    <span>Simpan Perubahan Banner</span>
+                    <span>Simpan Perubahan ke Database</span>
                   </button>
                 </div>
               </form>
