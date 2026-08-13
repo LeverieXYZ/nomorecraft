@@ -28,6 +28,38 @@ export async function POST(req: Request) {
   }
 }
 
+export async function PUT(req: Request) {
+  try {
+    await initDatabase();
+    const body = await req.json();
+    const { id, categoryId, title, description, imageUrl, buyLink, shopeeUrl, tiktokShopUrl, price, isSold, isFeatured } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "ID is required" }, { status: 400 });
+    }
+
+    await db
+      .update(works)
+      .set({
+        categoryId,
+        title,
+        description,
+        imageUrl,
+        buyLink,
+        shopeeUrl,
+        tiktokShopUrl,
+        price,
+        isSold,
+        isFeatured,
+      })
+      .where(eq(works.id, id));
+
+    return NextResponse.json({ success: true, message: "Work updated" });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request) {
   try {
     await initDatabase();

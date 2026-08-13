@@ -187,7 +187,7 @@ export default function KontakPage() {
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md transition-transform hover:scale-102"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md transition-transform hover:scale-[1.02]"
               >
                 <Send className="w-4 h-4 fill-white" />
                 <span>Kirim via WhatsApp Sekarang</span>

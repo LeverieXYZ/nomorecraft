@@ -162,7 +162,7 @@ export default function AdminKelolaBlogPage() {
             {posts.map((p) => (
               <div key={p.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between">
                 <div>
-                  <div className="aspect-16/10 bg-zinc-950 relative">
+                  <div className="aspect-[16/10] bg-zinc-950 relative">
                     <img src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover" />
                     <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-600 text-white">
                       {p.categoryName}

@@ -3,14 +3,32 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, LayoutDashboard, Image as ImageIcon, BookOpen, Camera, ShoppingBag, Share2, Info, LogOut } from "lucide-react";
+import {
+  Sparkles,
+  LayoutDashboard,
+  ImageIcon,
+  Grid,
+  BookOpen,
+  Video,
+  ShoppingBag,
+  Camera,
+  Share2,
+  Info,
+  LogOut,
+} from "lucide-react";
+
+import AestheticLogo from "./AestheticLogo";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
 
   const navItems = [
     { label: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: "Hero Banner", href: "/admin/tentang", icon: <ImageIcon className="w-4 h-4" /> },
+    { label: "Kelola Galeri", href: "/admin/galeri", icon: <Grid className="w-4 h-4" /> },
+    { label: "Hero Banner", href: "/admin/beranda", icon: <ImageIcon className="w-4 h-4" /> },
+    { label: "Kelola Blog", href: "/admin/blog", icon: <BookOpen className="w-4 h-4" /> },
+    { label: "Video TikTok", href: "/admin/tiktok", icon: <Video className="w-4 h-4" /> },
+    { label: "Tautan Toko", href: "/admin/tautan", icon: <ShoppingBag className="w-4 h-4" /> },
     { label: "Profil Tentang", href: "/admin/tentang", icon: <Info className="w-4 h-4" /> },
     { label: "Foto Kegiatan", href: "/admin/foto-kegiatan", icon: <Camera className="w-4 h-4" /> },
     { label: "Tautan Medsos", href: "/admin/sosial-media", icon: <Share2 className="w-4 h-4" /> },
@@ -21,10 +39,7 @@ export default function AdminSidebar() {
     <aside className="w-64 bg-zinc-900 text-white min-h-screen border-r border-zinc-800 flex flex-col justify-between p-6 shrink-0">
       <div className="space-y-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-rose-500 flex items-center justify-center shadow-md">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-extrabold text-base tracking-tight">Admin NoMoreCraft</span>
+          <AestheticLogo size="sm" />
         </Link>
 
         <nav className="space-y-1">

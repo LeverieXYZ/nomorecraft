@@ -10,7 +10,7 @@ export default function OwnerStory() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         {/* Owner Image */}
         <div className="md:col-span-5 relative group">
-          <div className="aspect-4/5 rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-800 bg-rose-100 dark:bg-zinc-800">
+          <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-800 bg-rose-100 dark:bg-zinc-800">
             <img
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800"
               alt={MOCK_SETTINGS.ownerName}

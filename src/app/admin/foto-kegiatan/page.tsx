@@ -189,7 +189,7 @@ export default function AdminFotoKegiatanPage() {
                 className="bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-xs flex flex-col justify-between"
               >
                 <div>
-                  <div className="aspect-16/10 bg-zinc-800 relative">
+                  <div className="aspect-[16/10] bg-zinc-800 relative">
                     <img src={photo.imageUrl} alt={photo.title} className="w-full h-full object-cover" />
                     <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-black/60 text-white backdrop-blur-md">
                       {photo.category}

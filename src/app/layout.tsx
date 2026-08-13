@@ -13,8 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className="scroll-smooth">
-      <body className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-rose-200 selection:text-rose-900">
-        {children}
+      <body className="text-zinc-900 min-h-screen flex flex-col font-sans antialiased selection:bg-rose-200 selection:text-rose-900">
+        <div className="min-h-screen flex flex-col bg-white/10 backdrop-blur-[1px]">
+          {children}
+        </div>
       </body>
     </html>
   );

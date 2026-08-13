@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 shadow-lg transition-transform hover:scale-102 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-50"
             >
               <span>{loading ? "Memproses Login..." : "Masuk ke Dashboard CMS"}</span>
               <ArrowRight className="w-4 h-4" />

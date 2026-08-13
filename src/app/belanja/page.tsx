@@ -110,7 +110,7 @@ export default function BelanjaPage() {
               className="bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-orange-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between"
             >
               <div>
-                <div className="aspect-4/3 overflow-hidden bg-orange-50 dark:bg-zinc-800 relative">
+                <div className="aspect-[4/3] overflow-hidden bg-orange-50 dark:bg-zinc-800 relative">
                   <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                   <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs">
                     {product.stockStatus}

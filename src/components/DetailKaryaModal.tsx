@@ -26,7 +26,7 @@ export default function DetailKaryaModal({ work, onClose }: DetailKaryaModalProp
 
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Image */}
-          <div className="aspect-square bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
+          <div className="aspect-[4/3] bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
             <img
               src={work.imageUrl}
               alt={work.title}

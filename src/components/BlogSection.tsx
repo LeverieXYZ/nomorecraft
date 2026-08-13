@@ -37,7 +37,7 @@ export default function BlogSection() {
             >
               <div>
                 {/* Cover Image */}
-                <div className="relative aspect-16/10 overflow-hidden bg-rose-50 dark:bg-zinc-800">
+                <div className="relative aspect-[16/10] overflow-hidden bg-rose-50 dark:bg-zinc-800">
                   <img
                     src={post.coverImageUrl}
                     alt={post.title}
@@ -95,7 +95,7 @@ export default function BlogSection() {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="aspect-21/9 bg-rose-50 dark:bg-zinc-800 relative">
+            <div className="aspect-[21/9] bg-rose-50 dark:bg-zinc-800 relative">
               <img
                 src={activeArticle.coverImageUrl}
                 alt={activeArticle.title}

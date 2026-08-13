@@ -23,7 +23,7 @@ export default function FeaturedShopProducts() {
             className="bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
           >
             <div>
-              <div className="aspect-4/3 overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
+              <div className="aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
                 <img src={prod.imageUrl} alt={prod.name} className="w-full h-full object-cover" />
                 <div className="absolute top-3 left-3 flex gap-1.5">
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs flex items-center gap-1">

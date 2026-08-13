@@ -17,7 +17,7 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-rose-200 selection:text-rose-900">
+    <main className="min-h-screen text-zinc-900 dark:text-zinc-100 font-sans selection:bg-rose-200 selection:text-rose-900">
       <Navbar />
       <HeroSection />
       <QuickNav />

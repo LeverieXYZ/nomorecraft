@@ -1,17 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
-import { MOCK_CATEGORIES, MOCK_WORKS, Work } from "@/data/mockData";
-import { Sparkles, ShoppingCart, ExternalLink, Heart, Check, Share2, Eye, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MOCK_CATEGORIES, Work } from "@/data/mockData";
+import { getStoredWorks } from "@/utils/worksStore";
+import { Sparkles, ShoppingCart, ExternalLink, Check, Share2, Eye, X } from "lucide-react";
 
 export default function CategoryShowcase() {
+  const [works, setWorks] = useState<Work[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [activeModalWork, setActiveModalWork] = useState<Work | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
+  const loadWorks = () => {
+    setWorks(getStoredWorks());
+  };
+
+  useEffect(() => {
+    loadWorks();
+    window.addEventListener("nomorecraft_works_updated", loadWorks);
+    window.addEventListener("storage", loadWorks);
+    return () => {
+      window.removeEventListener("nomorecraft_works_updated", loadWorks);
+      window.removeEventListener("storage", loadWorks);
+    };
+  }, []);
+
   const filteredWorks = selectedCategory
-    ? MOCK_WORKS.filter((work) => work.categoryId === selectedCategory)
-    : MOCK_WORKS;
+    ? works.filter((work) => work.categoryId === selectedCategory)
+    : works;
 
   const handleShare = (work: Work, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -50,11 +66,11 @@ export default function CategoryShowcase() {
                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-50 dark:hover:bg-zinc-700"
             }`}
           >
-            Semua Karya ({MOCK_WORKS.length})
+            Semua Karya ({works.length})
           </button>
 
           {MOCK_CATEGORIES.map((cat) => {
-            const count = MOCK_WORKS.filter((w) => w.categoryId === cat.id).length;
+            const count = works.filter((w) => w.categoryId === cat.id).length;
             const isSelected = selectedCategory === cat.id;
             return (
               <button
@@ -81,11 +97,11 @@ export default function CategoryShowcase() {
               className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col"
             >
               {/* Image Container */}
-              <div className="relative aspect-4/3 overflow-hidden bg-rose-50 dark:bg-zinc-800">
+              <div className="relative aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800">
                 <img
                   src={work.imageUrl}
                   alt={work.title}
-                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* Badges Overlay */}

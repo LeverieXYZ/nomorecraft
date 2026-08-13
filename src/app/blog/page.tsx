@@ -94,7 +94,7 @@ export default function BlogPage() {
               className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between"
             >
               <div>
-                <div className="relative aspect-16/10 overflow-hidden bg-rose-50 dark:bg-zinc-800">
+                <div className="relative aspect-[16/10] overflow-hidden bg-rose-50 dark:bg-zinc-800">
                   <img
                     src={post.coverImageUrl}
                     alt={post.title}
@@ -146,7 +146,7 @@ export default function BlogPage() {
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="aspect-21/9 bg-rose-50 dark:bg-zinc-800 relative">
+            <div className="aspect-[21/9] bg-rose-50 dark:bg-zinc-800 relative">
               <img
                 src={activeArticle.coverImageUrl}
                 alt={activeArticle.title}

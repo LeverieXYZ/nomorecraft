@@ -16,7 +16,7 @@ export default function AboutSection() {
             <div className="relative mx-auto max-w-md lg:max-w-none space-y-4">
               
               {/* Main Photo */}
-              <div className="relative rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-800 aspect-4/3">
+              <div className="relative rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-800 aspect-[4/3]">
                 <img
                   src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80"
                   alt="Proses Pembuatan Kerajinan"

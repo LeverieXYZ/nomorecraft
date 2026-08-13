@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Sparkles, MessageCircle, Instagram, Video, ShoppingBag, Heart, ArrowUpRight } from "lucide-react";
 import { MOCK_SETTINGS } from "@/data/mockData";
 
+import AestheticLogo from "./AestheticLogo";
+
 export default function Footer() {
   const waPrefilledUrl = `https://wa.me/${MOCK_SETTINGS.whatsappNumber}?text=${encodeURIComponent(
     "Halo No More Craft, saya tertarik dengan produk kerajinan handmade dan ingin konsultasi!"
@@ -18,16 +20,9 @@ export default function Footer() {
           
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 p-0.5 shadow-lg">
-                <div className="w-full h-full bg-zinc-900 rounded-[14px] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-rose-400" />
-                </div>
-              </div>
-              <span className="font-extrabold text-xl tracking-tight text-white">
-                No More Craft
-              </span>
-            </div>
+            <Link href="/">
+              <AestheticLogo size="md" />
+            </Link>
 
             <p className="text-sm text-zinc-400 leading-relaxed max-w-sm">
               Crafting & Handmade berkualitas tinggi dari Press-on Nails eksklusif, buket kawat bulu Pipe Cleaner, hingga rajutan Crochet buatan tangan dengan penuh cinta.

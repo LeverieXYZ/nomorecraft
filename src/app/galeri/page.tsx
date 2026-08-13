@@ -1,21 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MOCK_CATEGORIES, MOCK_WORKS, Work } from "@/data/mockData";
+import { MOCK_CATEGORIES, Work } from "@/data/mockData";
+import { getStoredWorks } from "@/utils/worksStore";
 import { Sparkles, Search, ShoppingCart, ExternalLink, Eye, Share2, Check, X, Filter } from "lucide-react";
 
 export default function GaleriPage() {
+  const [works, setWorks] = useState<Work[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModalWork, setActiveModalWork] = useState<Work | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const filteredWorks = MOCK_WORKS.filter((work) => {
+  const loadWorks = () => {
+    setWorks(getStoredWorks());
+  };
+
+  useEffect(() => {
+    loadWorks();
+    window.addEventListener("nomorecraft_works_updated", loadWorks);
+    window.addEventListener("storage", loadWorks);
+    return () => {
+      window.removeEventListener("nomorecraft_works_updated", loadWorks);
+      window.removeEventListener("storage", loadWorks);
+    };
+  }, []);
+
+  const filteredWorks = works.filter((work) => {
     const matchesCategory = selectedCategory ? work.categoryId === selectedCategory : true;
-    const matchesSearch = work.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          work.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      work.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      work.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -82,10 +99,10 @@ export default function GaleriPage() {
                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-50"
             }`}
           >
-            Semua ({MOCK_WORKS.length})
+            Semua ({works.length})
           </button>
           {MOCK_CATEGORIES.map((cat) => {
-            const count = MOCK_WORKS.filter((w) => w.categoryId === cat.id).length;
+            const count = works.filter((w) => w.categoryId === cat.id).length;
             const isSelected = selectedCategory === cat.id;
             return (
               <button
@@ -128,7 +145,7 @@ export default function GaleriPage() {
                 className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative aspect-4/3 overflow-hidden bg-rose-50 dark:bg-zinc-800">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800">
                     <img
                       src={work.imageUrl}
                       alt={work.title}
@@ -208,7 +225,7 @@ export default function GaleriPage() {
               <X className="w-5 h-5" />
             </button>
             <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="aspect-square bg-rose-50 dark:bg-zinc-800">
+              <div className="aspect-[4/3] bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
                 <img
                   src={activeModalWork.imageUrl}
                   alt={activeModalWork.title}
@@ -242,7 +259,7 @@ export default function GaleriPage() {
                     href={activeModalWork.tiktokShopUrl || "https://tiktok.com"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 rounded-xl border border-zinc-700"
+                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 rounded-xl border border-zinc-700 text-white"
                   >
                     <span>Beli di TikTok Shop</span>
                     <ExternalLink className="w-3.5 h-3.5 ml-auto" />

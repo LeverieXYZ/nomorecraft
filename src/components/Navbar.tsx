@@ -2,68 +2,57 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ShoppingBag, Menu, X, Lock, Instagram, MessageCircle, Video } from "lucide-react";
+import { ShoppingBag, Menu, X, Lock, Instagram, MessageCircle, Video } from "lucide-react";
+import AestheticLogo from "./AestheticLogo";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-rose-100 dark:border-zinc-800 transition-all duration-300">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-white/75 backdrop-blur-md border-b border-rose-100/60 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 p-0.5 shadow-md shadow-rose-200 dark:shadow-none group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-white dark:bg-zinc-900 rounded-[14px] flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-rose-500 animate-pulse" />
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-white group-hover:text-rose-600 transition-colors">
-                No More Craft
-              </span>
-              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-semibold tracking-widest uppercase">
-                Handmade & Custom
-              </span>
-            </div>
+          <Link href="/">
+            <AestheticLogo size="md" />
           </Link>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-7">
             <Link
               href="/"
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              className="text-sm font-semibold text-zinc-700 hover:text-rose-600 transition-colors"
             >
               Beranda
             </Link>
             <Link
               href="/galeri"
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              className="text-sm font-semibold text-zinc-700 hover:text-rose-600 transition-colors"
             >
               Galeri Karya
             </Link>
             <Link
               href="/blog"
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              className="text-sm font-semibold text-zinc-700 hover:text-rose-600 transition-colors"
             >
               Blog & Tutorial
             </Link>
             <Link
               href="/tentang"
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              className="text-sm font-semibold text-zinc-700 hover:text-rose-600 transition-colors"
             >
               Tentang Kami
             </Link>
             <Link
               href="/belanja"
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              className="text-sm font-semibold text-zinc-700 hover:text-rose-600 transition-colors"
             >
               Toko Marketplace
             </Link>
             <Link
               href="/kontak"
-              className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              className="text-sm font-semibold text-zinc-700 hover:text-rose-600 transition-colors"
             >
               Kontak
             </Link>
@@ -72,12 +61,12 @@ export default function Navbar() {
           {/* Right Header Actions & Social Media Icons */}
           <div className="hidden lg:flex items-center gap-4">
             {/* Social Media Quick Icons */}
-            <div className="flex items-center gap-2 pr-3 border-r border-rose-100 dark:border-zinc-800">
+            <div className="flex items-center gap-2 pr-3 border-r border-rose-100">
               <a
                 href="https://wa.me/6281234567890"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full text-zinc-500 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-full text-zinc-500 hover:text-emerald-500 hover:bg-emerald-50 transition-colors"
                 title="WhatsApp CS"
               >
                 <MessageCircle className="w-4 h-4 fill-emerald-500 text-emerald-500" />
@@ -86,7 +75,7 @@ export default function Navbar() {
                 href="https://instagram.com/nomorecraft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full text-zinc-500 hover:text-pink-500 hover:bg-pink-50 dark:hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-full text-zinc-500 hover:text-pink-500 hover:bg-pink-50 transition-colors"
                 title="Instagram @nomorecraft"
               >
                 <Instagram className="w-4 h-4 text-pink-500" />
@@ -95,17 +84,17 @@ export default function Navbar() {
                 href="https://tiktok.com/@nomorecraft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-full text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
                 title="TikTok @nomorecraft"
               >
-                <Video className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
+                <Video className="w-4 h-4 text-zinc-900" />
               </a>
             </div>
 
             {/* Admin CMS Login */}
             <Link
               href="/admin/login"
-              className="p-2.5 rounded-full text-zinc-500 hover:text-rose-600 dark:text-zinc-400 hover:bg-rose-50 dark:hover:bg-zinc-800 transition-colors"
+              className="p-2.5 rounded-full text-zinc-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
               title="CMS Admin Dashboard"
             >
               <Lock className="w-4.5 h-4.5" />
@@ -116,7 +105,7 @@ export default function Navbar() {
               href="https://shopee.co.id/nomorecraft"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 hover:opacity-95 shadow-md shadow-rose-200 dark:shadow-none hover:scale-105 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 hover:opacity-95 shadow-md shadow-rose-200 hover:scale-105 transition-all"
             >
               <ShoppingBag className="w-4 h-4" />
               <span>Beli di Shopee</span>
@@ -124,17 +113,17 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-3">
+          <div className="flex md:hidden items-center gap-2">
             <Link
               href="/admin/login"
-              className="p-2 rounded-full text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="p-2 rounded-full text-zinc-600 hover:bg-zinc-100"
             >
               <Lock className="w-5 h-5" />
             </Link>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-zinc-700 dark:text-zinc-300 hover:bg-rose-50 dark:hover:bg-zinc-800 transition-colors"
+              className="p-2 rounded-xl text-zinc-700 hover:bg-rose-50 transition-colors"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -146,53 +135,53 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-rose-100 dark:border-zinc-800 px-4 pt-3 pb-6 space-y-4 animate-fade-in">
+        <div className="md:hidden bg-white/95 backdrop-blur-xl border-b border-rose-100 px-4 pt-3 pb-6 space-y-4 animate-fade-in">
           <nav className="flex flex-col space-y-3">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 text-zinc-800"
             >
               Beranda
             </Link>
             <Link
               href="/galeri"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 text-zinc-800"
             >
               Galeri Karya
             </Link>
             <Link
               href="/blog"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 text-zinc-800"
             >
               Blog & Tutorial
             </Link>
             <Link
               href="/tentang"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 text-zinc-800"
             >
               Tentang Kami
             </Link>
             <Link
               href="/belanja"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 text-zinc-800"
             >
               Toko Marketplace
             </Link>
             <Link
               href="/kontak"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+              className="text-sm font-semibold px-3 py-2 rounded-xl hover:bg-rose-50 text-zinc-800"
             >
               Kontak
             </Link>
           </nav>
 
-          <div className="pt-2 border-t border-rose-100 dark:border-zinc-800 space-y-3">
+          <div className="pt-2 border-t border-rose-100 space-y-3">
             <div className="flex items-center justify-center gap-4">
               <a
                 href="https://wa.me/6281234567890"
@@ -216,7 +205,7 @@ export default function Navbar() {
                 href="https://tiktok.com/@nomorecraft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold text-xs flex items-center gap-1.5"
+                className="p-2.5 rounded-full bg-zinc-100 text-zinc-900 font-bold text-xs flex items-center gap-1.5"
               >
                 <Video className="w-4 h-4" />
                 <span>TikTok</span>

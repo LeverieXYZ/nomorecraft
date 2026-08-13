@@ -59,7 +59,7 @@ export default async function SingleBlogPage({ params }: { params: Promise<{ slu
 
       {/* Cover Image */}
       <section className="max-w-4xl mx-auto px-4 -mt-4">
-        <div className="aspect-21/9 rounded-3xl overflow-hidden shadow-xl border border-rose-100 dark:border-zinc-800 bg-rose-50 dark:bg-zinc-900">
+        <div className="aspect-[21/9] rounded-3xl overflow-hidden shadow-xl border border-rose-100 dark:border-zinc-800 bg-rose-50 dark:bg-zinc-900">
           <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover" />
         </div>
       </section>

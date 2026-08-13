@@ -170,7 +170,7 @@ export default function AdminKelolaBerandaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {banners.map((b) => (
               <div key={b.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-md">
-                <div className="aspect-21/9 bg-zinc-950 relative">
+                <div className="aspect-[21/9] bg-zinc-950 relative">
                   <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-80" />
                   <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white">
                     {b.badgeText || "Promo"}

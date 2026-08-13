@@ -68,7 +68,7 @@ export default function CraftActivityGallery() {
             onClick={() => setActivePhoto(photo)}
             className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5"
           >
-            <div className="aspect-4/3 overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
+            <div className="aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
               <img
                 src={photo.imageUrl}
                 alt={photo.title}
@@ -103,7 +103,7 @@ export default function CraftActivityGallery() {
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="aspect-16/10 bg-zinc-950">
+            <div className="aspect-[16/10] bg-zinc-950">
               <img src={activePhoto.imageUrl} alt={activePhoto.title} className="w-full h-full object-cover" />
             </div>
             <div className="p-6 space-y-2">

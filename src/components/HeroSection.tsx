@@ -110,7 +110,7 @@ export default function HeroSection() {
               <div className="absolute inset-0 bg-gradient-to-tr from-rose-400 to-amber-300 rounded-3xl transform rotate-3 scale-105 opacity-40 blur-sm" />
               
               {/* Image Container */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-zinc-800 aspect-4/3 sm:aspect-square">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-zinc-800 aspect-[4/3] sm:aspect-square">
                 <img
                   src={banner.imageUrl}
                   alt={banner.title}

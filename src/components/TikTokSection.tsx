@@ -47,7 +47,7 @@ export default function TikTokSection() {
           
           {/* Main Video Embed / Preview */}
           <div className="lg:col-span-7 bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 relative group">
-            <div className="aspect-16/9 bg-zinc-950 relative overflow-hidden flex items-center justify-center">
+            <div className="aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center">
               <img
                 src={activeVideo.thumbnailUrl}
                 alt={activeVideo.title}
@@ -140,7 +140,7 @@ export default function TikTokSection() {
                 href="https://tiktok.com/@nomorecraft"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3.5 text-sm font-bold text-white bg-zinc-950 dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-zinc-700 rounded-2xl shadow-lg border border-zinc-800 transition-all hover:scale-102"
+                className="flex items-center justify-center gap-2 w-full py-3.5 text-sm font-bold text-white bg-zinc-950 dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-zinc-700 rounded-2xl shadow-lg border border-zinc-800 transition-all hover:scale-[1.02]"
               >
                 <Video className="w-4 h-4 text-pink-400" />
                 <span>Lihat Feed Lengkap di TikTok @nomorecraft</span>

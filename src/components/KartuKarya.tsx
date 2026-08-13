@@ -28,7 +28,7 @@ export default function KartuKarya({ work, onSelect }: KartuKaryaProps) {
     >
       <div>
         {/* Image Container */}
-        <div className="relative aspect-4/3 overflow-hidden bg-rose-50 dark:bg-zinc-800">
+        <div className="relative aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800">
           <img
             src={work.imageUrl}
             alt={work.title}
