@@ -7,6 +7,7 @@ export interface HeroBanner {
   buttonLink: string;
   isActive: boolean;
   badgeText?: string;
+  tag?: string;
 }
 
 export interface Category {

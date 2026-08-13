@@ -1,28 +1,57 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MOCK_BANNERS, MOCK_SETTINGS } from "@/data/mockData";
+import { MOCK_SETTINGS, HeroBanner } from "@/data/mockData";
+import { getStoredBanners } from "@/utils/bannersStore";
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Heart, Award, ShieldCheck } from "lucide-react";
 
 export default function HeroSection() {
+  const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const loadBanners = () => {
+    const list = getStoredBanners();
+    setBanners(list);
+  };
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % MOCK_BANNERS.length);
-    }, 6000);
-    return () => clearInterval(timer);
+    loadBanners();
+    window.addEventListener("nomorecraft_banners_updated", loadBanners);
+    window.addEventListener("storage", loadBanners);
+    return () => {
+      window.removeEventListener("nomorecraft_banners_updated", loadBanners);
+      window.removeEventListener("storage", loadBanners);
+    };
   }, []);
 
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % banners.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % MOCK_BANNERS.length);
+    if (banners.length === 0) return;
+    setCurrentSlide((prev) => (prev + 1) % banners.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + MOCK_BANNERS.length) % MOCK_BANNERS.length);
+    if (banners.length === 0) return;
+    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
-  const banner = MOCK_BANNERS[currentSlide] || MOCK_BANNERS[0];
+  const banner = banners[currentSlide] || banners[0] || {
+    id: 1,
+    title: MOCK_SETTINGS.heroTitle,
+    subtitle: MOCK_SETTINGS.heroSubtitle,
+    imageUrl: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&auto=format&fit=crop&q=80",
+    buttonText: "Lihat Katalog",
+    buttonLink: "#galeri",
+    isActive: true,
+    tag: "Press-on Nails & Craft",
+  };
 
   return (
     <section id="beranda" className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden bg-gradient-to-b from-rose-50/50 via-white to-pink-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
@@ -38,7 +67,7 @@ export default function HeroSection() {
             {/* Top Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100/80 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-rose-500" />
-              <span>{banner.badgeText || MOCK_SETTINGS.tagline}</span>
+              <span>{banner.tag || banner.badgeText || MOCK_SETTINGS.tagline}</span>
             </div>
 
             {/* Title */}
@@ -120,7 +149,7 @@ export default function HeroSection() {
                 {/* Floating Badge */}
                 <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md p-4 rounded-2xl border border-rose-100 dark:border-zinc-700 shadow-lg flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-rose-500 font-bold uppercase tracking-wider">Highlight Promo</p>
+                    <p className="text-xs text-rose-500 font-bold uppercase tracking-wider">{banner.tag || banner.badgeText || "Highlight Promo"}</p>
                     <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{banner.title}</p>
                   </div>
                   <span className="px-2.5 py-1 text-xs font-semibold bg-rose-500 text-white rounded-full">
@@ -130,37 +159,39 @@ export default function HeroSection() {
               </div>
 
               {/* Controls */}
-              <div className="flex items-center justify-between mt-4 px-2">
-                <div className="flex gap-2">
-                  {MOCK_BANNERS.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentSlide(idx)}
-                      className={`h-2.5 rounded-full transition-all ${
-                        currentSlide === idx ? "w-8 bg-rose-500" : "w-2.5 bg-rose-200 dark:bg-zinc-700"
-                      }`}
-                      aria-label={`Go to slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
+              {banners.length > 1 && (
+                <div className="flex items-center justify-between mt-4 px-2">
+                  <div className="flex gap-2">
+                    {banners.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentSlide(idx)}
+                        className={`h-2.5 rounded-full transition-all ${
+                          currentSlide === idx ? "w-8 bg-rose-500" : "w-2.5 bg-rose-200 dark:bg-zinc-700"
+                        }`}
+                        aria-label={`Go to slide ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
 
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={prevSlide}
-                    className="p-2 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-50 transition-colors"
-                    aria-label="Previous Banner"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    className="p-2 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-50 transition-colors"
-                    aria-label="Next Banner"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={prevSlide}
+                      className="p-2 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-50 transition-colors"
+                      aria-label="Previous Banner"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={nextSlide}
+                      className="p-2 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-rose-50 transition-colors"
+                      aria-label="Next Banner"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
