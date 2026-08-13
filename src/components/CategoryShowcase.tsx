@@ -125,9 +125,17 @@ export default function CategoryShowcase() {
 
                 {/* Quick Action Overlay */}
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <span className="p-3 rounded-full bg-white/90 text-zinc-900 shadow-lg hover:scale-110 transition-transform">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveModalWork(work);
+                    }}
+                    className="p-3 rounded-full bg-white/90 text-zinc-900 shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                    title="Lihat Detail Karya"
+                  >
                     <Eye className="w-5 h-5" />
-                  </span>
+                  </button>
                 </div>
               </div>
 
@@ -152,6 +160,7 @@ export default function CategoryShowcase() {
 
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={(e) => handleShare(work, e)}
                       className="p-2 rounded-full text-zinc-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-800 transition-colors"
                       title="Bagikan link karya"
@@ -184,9 +193,16 @@ export default function CategoryShowcase() {
 
       {/* Modal Detail Karya */}
       {activeModalWork && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in cursor-pointer"
+          onClick={() => setActiveModalWork(null)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
+              type="button"
               onClick={() => setActiveModalWork(null)}
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors"
             >

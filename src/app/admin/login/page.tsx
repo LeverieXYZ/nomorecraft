@@ -3,23 +3,34 @@
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Sparkles, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Sparkles, Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getStoredAdminPassword } from "@/utils/authStore";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("admin@nomorecraft.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage("");
     setLoading(true);
+
     setTimeout(() => {
       setLoading(false);
-      router.push("/admin/dashboard");
-    }, 500);
+      const validPassword = getStoredAdminPassword();
+      const validEmail = "admin@nomorecraft.com";
+
+      if (email.trim().toLowerCase() === validEmail && password === validPassword) {
+        router.push("/admin/dashboard");
+      } else {
+        setErrorMessage("Email atau Kata Sandi yang Anda masukkan salah. (Default: admin@nomorecraft.com / admin123)");
+      }
+    }, 600);
   };
 
   return (
@@ -38,7 +49,14 @@ export default function AdminLoginPage() {
             <p className="text-xs text-zinc-400">Masuk untuk mengelola seluruh konten No More Craft</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          {errorMessage && (
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-zinc-300 mb-1">Email Admin</label>
               <div className="relative">
@@ -48,6 +66,8 @@ export default function AdminLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Masukkan email admin"
+                  autoComplete="off"
                   className="w-full pl-11 pr-4 py-3 rounded-xl bg-zinc-800/90 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
@@ -62,6 +82,8 @@ export default function AdminLoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Masukkan kata sandi"
+                  autoComplete="off"
                   className="w-full pl-11 pr-11 py-3 rounded-xl bg-zinc-800/90 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
                 <button

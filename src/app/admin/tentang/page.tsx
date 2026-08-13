@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_SETTINGS } from "@/data/mockData";
-import { Save, Sparkles, Check, ArrowLeft, Heart } from "lucide-react";
+import { getStoredAboutSettings, saveStoredAboutSettings } from "@/utils/aboutStore";
+import { Save, Check, ArrowLeft, Heart } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminTentangPage() {
@@ -19,25 +20,38 @@ export default function AdminTentangPage() {
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  useEffect(() => {
+    const stored = getStoredAboutSettings();
+    setFormData({
+      siteName: stored.siteName || MOCK_SETTINGS.siteName,
+      tagline: stored.tagline || MOCK_SETTINGS.tagline,
+      aboutText: stored.aboutText || MOCK_SETTINGS.aboutText,
+      ownerName: stored.ownerName || MOCK_SETTINGS.ownerName,
+      whatsappNumber: stored.whatsappNumber || MOCK_SETTINGS.whatsappNumber,
+    });
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/cms/beranda", {
+      const fullSettings = {
+        ...MOCK_SETTINGS,
+        ...formData,
+      };
+      saveStoredAboutSettings(fullSettings);
+
+      await fetch("/api/cms/beranda", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "UPDATE_SETTINGS",
-          data: {
-            ...MOCK_SETTINGS,
-            ...formData,
-          },
+          data: fullSettings,
         }),
       });
-      if (res.ok) {
-        setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 3000);
-      }
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
       console.error("Failed to save settings:", err);
     } finally {
@@ -53,7 +67,7 @@ export default function AdminTentangPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <Link
-              href="/admin/login"
+              href="/admin/dashboard"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-500 hover:underline mb-2"
             >
               <ArrowLeft className="w-4 h-4" />

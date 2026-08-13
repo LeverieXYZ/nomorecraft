@@ -1,13 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AboutSection from "@/components/AboutSection";
-import { MOCK_SETTINGS } from "@/data/mockData";
-import { Heart, Sparkles, ShieldCheck, Smile, Award, MessageCircle, ArrowRight } from "lucide-react";
+import { MOCK_SETTINGS, SiteSettings } from "@/data/mockData";
+import { getStoredAboutSettings } from "@/utils/aboutStore";
+import { Heart, Sparkles, ShieldCheck, Award, MessageCircle, ArrowRight } from "lucide-react";
 
 export default function TentangPage() {
+  const [settings, setSettings] = useState<SiteSettings>(MOCK_SETTINGS);
+
+  const loadSettings = () => {
+    setSettings(getStoredAboutSettings());
+  };
+
+  useEffect(() => {
+    loadSettings();
+    window.addEventListener("nomorecraft_about_updated", loadSettings);
+    window.addEventListener("storage", loadSettings);
+    return () => {
+      window.removeEventListener("nomorecraft_about_updated", loadSettings);
+      window.removeEventListener("storage", loadSettings);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-rose-200">
       <Navbar />
@@ -17,10 +34,10 @@ export default function TentangPage() {
         <div className="max-w-4xl mx-auto px-4 space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-semibold">
             <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-            <span>Cerita & Dedikasi No More Craft</span>
+            <span>Cerita & Dedikasi {settings.siteName}</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
-            Mengenal Lebih Dekat No More Craft
+            Mengenal Lebih Dekat {settings.siteName}
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             Setiap detail dibuat buatan tangan (100% handmade) dengan cinta, kecermatan, dan material berkualitas tinggi.
@@ -36,7 +53,7 @@ export default function TentangPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white">
-              Mengapa Memilih No More Craft?
+              Mengapa Memilih {settings.siteName}?
             </h2>
             <p className="text-sm text-zinc-500 mt-2">
               Prinsip yang selalu kami jaga dalam setiap pesanan dan kerajinan tangan.
@@ -83,11 +100,11 @@ export default function TentangPage() {
           Ingin Berkonsultasi atau Pesan Custom?
         </h2>
         <p className="text-zinc-600 dark:text-zinc-400 text-base max-w-xl mx-auto">
-          Hubungi {MOCK_SETTINGS.ownerName} langsung melalui WhatsApp untuk diskusi warna, harga paket, atau jadwal pengerjaan.
+          Hubungi {settings.ownerName} langsung melalui WhatsApp untuk diskusi warna, harga paket, atau jadwal pengerjaan.
         </p>
         <div>
           <a
-            href={`https://wa.me/${MOCK_SETTINGS.whatsappNumber}?text=Halo%20${encodeURIComponent(MOCK_SETTINGS.ownerName)},%20saya%20ingin%20tanya%20tentang%20kerajinan%20No%20More%20Craft`}
+            href={`https://wa.me/${settings.whatsappNumber}?text=Halo%20${encodeURIComponent(settings.ownerName)},%20saya%20ingin%20tanya%20tentang%20kerajinan%20${encodeURIComponent(settings.siteName)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg transition-transform hover:scale-105"

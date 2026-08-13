@@ -14,6 +14,7 @@ import {
   Camera,
   Share2,
   Info,
+  Key,
   LogOut,
 } from "lucide-react";
 
@@ -30,6 +31,7 @@ export default function AdminSidebar() {
     { label: "Video TikTok", href: "/admin/tiktok", icon: <Video className="w-4 h-4" /> },
     { label: "Tautan Toko", href: "/admin/tautan", icon: <ShoppingBag className="w-4 h-4" /> },
     { label: "Profil Tentang", href: "/admin/tentang", icon: <Info className="w-4 h-4" /> },
+    { label: "Ubah Password", href: "/admin/ubah-password", icon: <Key className="w-4 h-4" /> },
     { label: "Foto Kegiatan", href: "/admin/foto-kegiatan", icon: <Camera className="w-4 h-4" /> },
     { label: "Tautan Medsos", href: "/admin/sosial-media", icon: <Share2 className="w-4 h-4" /> },
     { label: "Lihat Website", href: "/", icon: <Sparkles className="w-4 h-4 text-rose-500" /> },

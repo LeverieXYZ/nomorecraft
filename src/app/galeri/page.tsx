@@ -167,9 +167,17 @@ export default function GaleriPage() {
                       </span>
                     )}
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="p-3 rounded-full bg-white/90 text-zinc-900 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveModalWork(work);
+                        }}
+                        className="p-3 rounded-full bg-white/90 text-zinc-900 shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                        title="Lihat Detail Karya"
+                      >
                         <Eye className="w-5 h-5" />
-                      </span>
+                      </button>
                     </div>
                   </div>
 
@@ -191,6 +199,7 @@ export default function GaleriPage() {
 
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={(e) => handleShare(work, e)}
                       className="p-2 rounded-full text-zinc-500 hover:text-rose-600 hover:bg-rose-50"
                     >
@@ -216,11 +225,18 @@ export default function GaleriPage() {
 
       {/* Modal Detail Karya */}
       {activeModalWork && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm cursor-pointer"
+          onClick={() => setActiveModalWork(null)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-rose-100 dark:border-zinc-800 relative cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
+              type="button"
               onClick={() => setActiveModalWork(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-rose-100 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -249,7 +265,7 @@ export default function GaleriPage() {
                     href={activeModalWork.shopeeUrl || activeModalWork.buyLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-orange-500 rounded-xl shadow-md"
+                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-xl shadow-md transition-colors"
                   >
                     <ShoppingCart className="w-4 h-4" />
                     <span>Beli di Shopee</span>
@@ -259,7 +275,7 @@ export default function GaleriPage() {
                     href={activeModalWork.tiktokShopUrl || "https://tiktok.com"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 rounded-xl border border-zinc-700 text-white"
+                    className="flex items-center justify-center gap-2 w-full py-3 text-sm font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl border border-zinc-700 transition-colors"
                   >
                     <span>Beli di TikTok Shop</span>
                     <ExternalLink className="w-3.5 h-3.5 ml-auto" />

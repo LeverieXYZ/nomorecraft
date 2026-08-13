@@ -1,10 +1,27 @@
 "use client";
 
-import React from "react";
-import { MOCK_SETTINGS } from "@/data/mockData";
+import React, { useState, useEffect } from "react";
+import { MOCK_SETTINGS, SiteSettings } from "@/data/mockData";
+import { getStoredAboutSettings } from "@/utils/aboutStore";
 import { Heart, Sparkles, Target, Compass, MessageCircle } from "lucide-react";
 
 export default function AboutSection() {
+  const [settings, setSettings] = useState<SiteSettings>(MOCK_SETTINGS);
+
+  const loadSettings = () => {
+    setSettings(getStoredAboutSettings());
+  };
+
+  useEffect(() => {
+    loadSettings();
+    window.addEventListener("nomorecraft_about_updated", loadSettings);
+    window.addEventListener("storage", loadSettings);
+    return () => {
+      window.removeEventListener("nomorecraft_about_updated", loadSettings);
+      window.removeEventListener("storage", loadSettings);
+    };
+  }, []);
+
   return (
     <section id="tentang" className="py-20 bg-gradient-to-b from-pink-50/40 via-rose-50/20 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,11 +68,11 @@ export default function AboutSection() {
               {/* Floating Owner Badge */}
               <div className="absolute -bottom-6 -right-2 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl border border-rose-100 dark:border-zinc-700 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                  C
+                  {settings.ownerName ? settings.ownerName.charAt(0) : "C"}
                 </div>
                 <div>
                   <p className="text-xs text-rose-500 font-bold uppercase tracking-wider">Pemilik Studio</p>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{MOCK_SETTINGS.ownerName}</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{settings.ownerName}</p>
                 </div>
               </div>
 
@@ -66,7 +83,7 @@ export default function AboutSection() {
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Tentang No More Craft</span>
+              <span>Tentang {settings.siteName}</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
@@ -74,7 +91,7 @@ export default function AboutSection() {
             </h2>
 
             <p className="text-zinc-600 dark:text-zinc-300 text-base sm:text-lg leading-relaxed">
-              {MOCK_SETTINGS.aboutText}
+              {settings.aboutText}
             </p>
 
             {/* Mission & Vision Cards */}
@@ -103,7 +120,7 @@ export default function AboutSection() {
             {/* Direct WhatsApp Contact Link */}
             <div className="pt-4">
               <a
-                href={`https://wa.me/${MOCK_SETTINGS.whatsappNumber}?text=Halo%20No%20More%20Craft,%20saya%20tertarik%20tanya%20produk`}
+                href={`https://wa.me/${settings.whatsappNumber}?text=Halo%20${encodeURIComponent(settings.siteName)},%20saya%20tertarik%20tanya%20produk`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-md shadow-emerald-200 dark:shadow-none transition-all hover:scale-105"
