@@ -2,29 +2,71 @@
 
 import React, { useState, useEffect } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { MOCK_SETTINGS, HeroBanner } from "@/data/mockData";
-import { getStoredBanners, saveStoredBanners } from "@/utils/bannersStore";
-import { Save, Plus, Trash2, Check, Image as ImageIcon, Tag as TagIcon } from "lucide-react";
+import { HeroBanner } from "@/data/mockData";
+import {
+  getStoredBanners,
+  saveStoredBanners,
+  getStoredHeroText,
+  saveStoredHeroText,
+} from "@/utils/bannersStore";
+import {
+  Save,
+  Plus,
+  Trash2,
+  Check,
+  Image as ImageIcon,
+  Tag as TagIcon,
+  Edit3,
+  X,
+  Sparkles,
+  Link2,
+} from "lucide-react";
+import ModalPortal from "@/components/ModalPortal";
+
+const PRESET_TAGS = [
+  "Baru ✨",
+  "Promo Spesial 🔥",
+  "Hot Deal 💥",
+  "Best Seller ⭐",
+  "Limited Edition 🏷️",
+  "Custom Design 🎨",
+];
 
 export default function AdminKelolaBerandaPage() {
-  const [heroTitle, setHeroTitle] = useState(MOCK_SETTINGS.heroTitle);
-  const [heroSubtitle, setHeroSubtitle] = useState(MOCK_SETTINGS.heroSubtitle);
+  const [heroTitle, setHeroTitle] = useState("");
+  const [heroSubtitle, setHeroSubtitle] = useState("");
   const [banners, setBanners] = useState<HeroBanner[]>([]);
 
+  // Form New Banner
   const [newTitle, setNewTitle] = useState("");
   const [newSubtitle, setNewSubtitle] = useState("");
-  const [newTag, setNewTag] = useState("");
+  const [newTag, setNewTag] = useState("Baru ✨");
   const [newImageUrl, setNewImageUrl] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [newButtonText, setNewButtonText] = useState("Lihat Detail");
+  const [newButtonLink, setNewButtonLink] = useState("#galeri");
+
+  // Form Edit Banner State
+  const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
+
+  const [savedHero, setSavedHero] = useState(false);
+  const [savedBanner, setSavedBanner] = useState(false);
 
   useEffect(() => {
+    const textData = getStoredHeroText();
+    setHeroTitle(textData.title);
+    setHeroSubtitle(textData.subtitle);
+
     setBanners(getStoredBanners());
   }, []);
 
   const handleSaveHero = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    saveStoredHeroText({
+      title: heroTitle,
+      subtitle: heroSubtitle,
+    });
+    setSavedHero(true);
+    setTimeout(() => setSavedHero(false), 3000);
   };
 
   const handleAddBanner = (e: React.FormEvent) => {
@@ -39,8 +81,8 @@ export default function AdminKelolaBerandaPage() {
         title: newTitle,
         subtitle: newSubtitle,
         imageUrl: newImageUrl,
-        buttonText: "Lihat Detail",
-        buttonLink: "#galeri",
+        buttonText: newButtonText || "Lihat Detail",
+        buttonLink: newButtonLink || "#galeri",
         isActive: true,
         badgeText: tagText,
         tag: tagText,
@@ -53,14 +95,46 @@ export default function AdminKelolaBerandaPage() {
 
     setNewTitle("");
     setNewSubtitle("");
-    setNewTag("");
+    setNewTag("Baru ✨");
     setNewImageUrl("");
+    setNewButtonText("Lihat Detail");
+    setNewButtonLink("#galeri");
+
+    setSavedBanner(true);
+    setTimeout(() => setSavedBanner(false), 3000);
+  };
+
+  const handleOpenEdit = (banner: HeroBanner) => {
+    setEditingBanner({ ...banner });
+  };
+
+  const handleSaveEditedBanner = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBanner) return;
+
+    const updatedBanners = banners.map((b) =>
+      b.id === editingBanner.id
+        ? {
+            ...editingBanner,
+            badgeText: editingBanner.tag || editingBanner.badgeText,
+          }
+        : b
+    );
+
+    setBanners(updatedBanners);
+    saveStoredBanners(updatedBanners);
+    setEditingBanner(null);
+
+    setSavedBanner(true);
+    setTimeout(() => setSavedBanner(false), 3000);
   };
 
   const handleDeleteBanner = (id: number) => {
-    const updated = banners.filter((b) => b.id !== id);
-    setBanners(updated);
-    saveStoredBanners(updated);
+    if (confirm("Apakah Anda yakin ingin menghapus banner ini?")) {
+      const updated = banners.filter((b) => b.id !== id);
+      setBanners(updated);
+      saveStoredBanners(updated);
+    }
   };
 
   return (
@@ -72,42 +146,51 @@ export default function AdminKelolaBerandaPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Content Beranda</h1>
             <p className="text-sm text-zinc-400">
-              Atur banner carousel, tag promo, teks hero utama, dan foto slider yang tampil di beranda.
+              Edit teks hero utama, kelola slider banner carousel, tambahkan tag khusus, dan perbarui banner yang sudah diposting.
             </p>
           </div>
 
-          {saved && (
+          {(savedHero || savedBanner) && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Teks Hero Disimpan!</span>
+              <span>Data Berhasil Disimpan & Diperbarui!</span>
             </div>
           )}
         </div>
 
-        {/* Hero Section Edit */}
-        <form onSubmit={handleSaveHero} className="bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-4">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-rose-500" />
-            <span>Teks Hero Utama Beranda</span>
-          </h2>
+        {/* 1. Edit Teks Hero Utama Beranda */}
+        <form onSubmit={handleSaveHero} className="bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-4 shadow-md">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-rose-500" />
+              <span>Teks Hero Utama Beranda (Headline)</span>
+            </h2>
+            <span className="text-xs text-rose-400 font-semibold bg-rose-950/60 px-3 py-1 rounded-full border border-rose-800/40">
+              Tersimpan Otomatis saat di-Submit
+            </span>
+          </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Hero (Headline)</label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Hero (Headline Utama)</label>
               <input
                 type="text"
+                required
                 value={heroTitle}
                 onChange={(e) => setHeroTitle(e.target.value)}
+                placeholder="Masukkan judul hero utama"
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Sub-judul / Deskripsi Hero</label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Sub-judul / Deskripsi Singkat Hero</label>
               <textarea
                 rows={3}
+                required
                 value={heroSubtitle}
                 onChange={(e) => setHeroSubtitle(e.target.value)}
+                placeholder="Masukkan deskripsi hero utama"
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
@@ -119,25 +202,25 @@ export default function AdminKelolaBerandaPage() {
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
             >
               <Save className="w-4 h-4" />
-              <span>Simpan Perubahan Hero</span>
+              <span>Simpan Teks Hero Utama</span>
             </button>
           </div>
         </form>
 
-        {/* Add New Banner Form */}
-        <form onSubmit={handleAddBanner} className="bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-4">
+        {/* 2. Form Tambah Banner Baru dengan Opsi Tag */}
+        <form onSubmit={handleAddBanner} className="bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-5 shadow-md">
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Plus className="w-5 h-5 text-rose-500" />
             <span>Tambah Hero Banner Slider Baru</span>
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Banner</label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Banner *</label>
               <input
                 type="text"
                 required
-                placeholder="mis. Promo Spesial Valentine"
+                placeholder="mis. Promo Spesial Valentine Press-on"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -145,7 +228,7 @@ export default function AdminKelolaBerandaPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Sub-judul / Deskripsi Banner</label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Sub-judul / Deskripsi Promo</label>
               <input
                 type="text"
                 placeholder="mis. Diskon 20% khusus pesanan custom..."
@@ -154,76 +237,270 @@ export default function AdminKelolaBerandaPage() {
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
+          </div>
+
+          {/* Opsi Tag Banner */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+              <TagIcon className="w-4 h-4 text-rose-400" />
+              <span>Opsi Tag / Label Badge Banner *</span>
+            </label>
+
+            {/* Tag Preset Quick Selection Chips */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {PRESET_TAGS.map((tag) => (
+                <button
+                  type="button"
+                  key={tag}
+                  onClick={() => setNewTag(tag)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                    newTag === tag
+                      ? "bg-rose-500 text-white border-rose-400 shadow-md"
+                      : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white hover:bg-zinc-700"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="text"
+              required
+              placeholder="Ketik atau pilih tag di atas (mis. Promo Spesial 🔥 / Best Seller)"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-zinc-300 mb-1">URL Gambar Banner *</label>
+              <input
+                type="url"
+                required
+                placeholder="https://images.unsplash.com/..."
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1 flex items-center gap-1">
-                <TagIcon className="w-3.5 h-3.5 text-rose-400" />
-                <span>Tag / Label Banner</span>
-              </label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Teks Tombol CTA</label>
               <input
                 type="text"
-                placeholder="mis. Hot Deal 🔥 / Promo 20% / Limited"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="Lihat Detail / Beli"
+                value={newButtonText}
+                onChange={(e) => setNewButtonText(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-zinc-300 mb-1">URL Gambar Banner</label>
-            <input
-              type="url"
-              required
-              placeholder="https://images.unsplash.com/..."
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
-          </div>
-
           <div className="flex justify-end pt-2">
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 shadow-md transition-transform hover:scale-105"
             >
               <Plus className="w-4 h-4" />
-              <span>Tambah Banner</span>
+              <span>Tambah Banner Baru</span>
             </button>
           </div>
         </form>
 
-        {/* Existing Banners Grid */}
+        {/* 3. Daftar Banner Aktif dengan Opsi EDIT & HAPUS */}
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-white">Daftar Banner Aktif ({banners.length})</h2>
+          <h2 className="text-lg font-bold text-white flex items-center justify-between">
+            <span>Daftar Banner Slider Aktif ({banners.length})</span>
+            <span className="text-xs font-normal text-zinc-400">Klik 'Edit Banner' untuk mengubah isi promo</span>
+          </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {banners.map((b) => (
-              <div key={b.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-md">
-                <div className="aspect-[21/9] bg-zinc-950 relative">
-                  <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-80" />
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md">
-                    <TagIcon className="w-3 h-3" />
-                    <span>{b.tag || b.badgeText || "Promo"}</span>
+              <div key={b.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-md flex flex-col justify-between">
+                <div>
+                  <div className="aspect-[21/9] bg-zinc-950 relative overflow-hidden">
+                    <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-85" />
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md">
+                      <TagIcon className="w-3 h-3" />
+                      <span>{b.tag || b.badgeText || "Promo"}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-2">
+                    <h3 className="text-base font-bold text-white">{b.title}</h3>
+                    <p className="text-xs text-zinc-400 line-clamp-2">{b.subtitle}</p>
+                    <div className="text-[11px] text-rose-400 flex items-center gap-1">
+                      <Link2 className="w-3 h-3" />
+                      <span>{b.buttonText || "Lihat Detail"} ({b.buttonLink || "#galeri"})</span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-6 space-y-3">
-                  <h3 className="text-base font-bold text-white">{b.title}</h3>
-                  <p className="text-xs text-zinc-400">{b.subtitle}</p>
-                  <div className="flex justify-end pt-2 border-t border-zinc-800">
-                    <button
-                      onClick={() => handleDeleteBanner(b.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Hapus Banner</span>
-                    </button>
-                  </div>
+
+                <div className="px-6 pb-6 pt-3 border-t border-zinc-800 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleOpenEdit(b)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 transition-colors border border-zinc-700"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Edit Banner</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteBanner(b.id)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Hapus</span>
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </main>
+
+      {/* Modal Edit Banner yang Telah Diposting */}
+      {editingBanner && (
+        <ModalPortal>
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md cursor-pointer animate-fade-in"
+            onClick={() => setEditingBanner(null)}
+          >
+            <div
+              className="bg-zinc-900 rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 border border-zinc-800 shadow-2xl relative cursor-default space-y-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setEditingBanner(null)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 text-xs font-bold border border-rose-500/30">
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Banner Postingan</span>
+                </div>
+                <h2 className="text-xl font-extrabold text-white">Edit Hero Banner #{editingBanner.id}</h2>
+              </div>
+
+              <form onSubmit={handleSaveEditedBanner} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Banner *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingBanner.title}
+                    onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 mb-1">Sub-judul / Deskripsi Banner</label>
+                  <textarea
+                    rows={2}
+                    value={editingBanner.subtitle}
+                    onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                {/* Tag Selection di Modal Edit */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                    <TagIcon className="w-4 h-4 text-rose-400" />
+                    <span>Tag / Label Banner *</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {PRESET_TAGS.map((tag) => (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => setEditingBanner({ ...editingBanner, tag, badgeText: tag })}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
+                          (editingBanner.tag || editingBanner.badgeText) === tag
+                            ? "bg-rose-500 text-white border-rose-400 shadow-md"
+                            : "bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={editingBanner.tag || editingBanner.badgeText || ""}
+                    onChange={(e) =>
+                      setEditingBanner({
+                        ...editingBanner,
+                        tag: e.target.value,
+                        badgeText: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-300 mb-1">URL Gambar Banner *</label>
+                  <input
+                    type="url"
+                    required
+                    value={editingBanner.imageUrl}
+                    onChange={(e) => setEditingBanner({ ...editingBanner, imageUrl: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1">Teks Tombol</label>
+                    <input
+                      type="text"
+                      value={editingBanner.buttonText || "Lihat Detail"}
+                      onChange={(e) => setEditingBanner({ ...editingBanner, buttonText: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1">Link Tombol</label>
+                    <input
+                      type="text"
+                      value={editingBanner.buttonLink || "#galeri"}
+                      onChange={(e) => setEditingBanner({ ...editingBanner, buttonLink: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => setEditingBanner(null)}
+                    className="px-5 py-2.5 rounded-full text-xs font-bold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Simpan Perubahan Banner</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </ModalPortal>
+      )}
     </div>
   );
 }

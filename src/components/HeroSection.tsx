@@ -2,25 +2,31 @@
 
 import React, { useState, useEffect } from "react";
 import { MOCK_SETTINGS, HeroBanner } from "@/data/mockData";
-import { getStoredBanners } from "@/utils/bannersStore";
+import { getStoredBanners, getStoredHeroText, HeroTextSettings } from "@/utils/bannersStore";
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Heart, Award, ShieldCheck } from "lucide-react";
 
 export default function HeroSection() {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
+  const [heroText, setHeroText] = useState<HeroTextSettings>({
+    title: MOCK_SETTINGS.heroTitle,
+    subtitle: MOCK_SETTINGS.heroSubtitle,
+  });
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const loadBanners = () => {
-    const list = getStoredBanners();
-    setBanners(list);
+  const loadData = () => {
+    setBanners(getStoredBanners());
+    setHeroText(getStoredHeroText());
   };
 
   useEffect(() => {
-    loadBanners();
-    window.addEventListener("nomorecraft_banners_updated", loadBanners);
-    window.addEventListener("storage", loadBanners);
+    loadData();
+    window.addEventListener("nomorecraft_banners_updated", loadData);
+    window.addEventListener("nomorecraft_hero_text_updated", loadData);
+    window.addEventListener("storage", loadData);
     return () => {
-      window.removeEventListener("nomorecraft_banners_updated", loadBanners);
-      window.removeEventListener("storage", loadBanners);
+      window.removeEventListener("nomorecraft_banners_updated", loadData);
+      window.removeEventListener("nomorecraft_hero_text_updated", loadData);
+      window.removeEventListener("storage", loadData);
     };
   }, []);
 
@@ -44,8 +50,8 @@ export default function HeroSection() {
 
   const banner = banners[currentSlide] || banners[0] || {
     id: 1,
-    title: MOCK_SETTINGS.heroTitle,
-    subtitle: MOCK_SETTINGS.heroSubtitle,
+    title: heroText.title,
+    subtitle: heroText.subtitle,
     imageUrl: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&auto=format&fit=crop&q=80",
     buttonText: "Lihat Katalog",
     buttonLink: "#galeri",
@@ -72,21 +78,21 @@ export default function HeroSection() {
 
             {/* Title */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-tight">
-              {banner.title}
+              {banner.title || heroText.title}
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-              {banner.subtitle}
+              {banner.subtitle || heroText.subtitle}
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
               <a
-                href={banner.buttonLink}
+                href={banner.buttonLink || "#galeri"}
                 className="flex items-center gap-2 px-7 py-3.5 text-base font-bold text-white bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 hover:from-rose-600 hover:to-pink-600 rounded-full shadow-lg shadow-rose-200 dark:shadow-none hover:scale-105 transition-all"
               >
-                <span>{banner.buttonText}</span>
+                <span>{banner.buttonText || "Lihat Katalog"}</span>
                 <ArrowRight className="w-5 h-5" />
               </a>
 
