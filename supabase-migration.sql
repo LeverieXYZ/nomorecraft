@@ -52,9 +52,13 @@ CREATE TABLE IF NOT EXISTS works (
   tiktok_shop_url TEXT,
   price TEXT NOT NULL,
   is_sold BOOLEAN NOT NULL DEFAULT false,
+  stock_status TEXT NOT NULL DEFAULT 'Ready Stock',
   is_featured BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Ensure stock_status column exists on existing tables
+ALTER TABLE works ADD COLUMN IF NOT EXISTS stock_status TEXT DEFAULT 'Ready Stock';
 
 -- 5. Blog Categories
 CREATE TABLE IF NOT EXISTS blog_categories (

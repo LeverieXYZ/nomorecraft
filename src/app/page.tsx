@@ -6,7 +6,6 @@ import CategoryShowcase from "@/components/CategoryShowcase";
 import AboutSection from "@/components/AboutSection";
 import BlogSection from "@/components/BlogSection";
 import TikTokSection from "@/components/TikTokSection";
-import ShopSection from "@/components/ShopSection";
 import QuickShopBar from "@/components/QuickShopBar";
 import Footer from "@/components/Footer";
 
@@ -25,7 +24,6 @@ export default function HomePage() {
       <AboutSection />
       <BlogSection />
       <TikTokSection />
-      <ShopSection />
       <QuickShopBar />
       <Footer />
     </main>

@@ -14,6 +14,9 @@ import {
   X,
   Save,
   Star,
+  PackageCheck,
+  Clock,
+  Ban,
 } from "lucide-react";
 
 export default function AdminKelolaGaleriPage() {
@@ -35,7 +38,7 @@ export default function AdminKelolaGaleriPage() {
   const [shopeeUrl, setShopeeUrl] = useState("https://shopee.co.id/nomorecraft");
   const [tiktokShopUrl, setTiktokShopUrl] = useState("https://tiktok.com/@nomorecraft");
   const [isFeatured, setIsFeatured] = useState(true);
-  const [isSold, setIsSold] = useState(false);
+  const [stockStatus, setStockStatus] = useState<"Ready Stock" | "Pre-Order" | "Sold Out">("Ready Stock");
 
   const [savedSuccess, setSavedSuccess] = useState<string | null>(null);
 
@@ -71,7 +74,7 @@ export default function AdminKelolaGaleriPage() {
     setShopeeUrl("https://shopee.co.id/nomorecraft");
     setTiktokShopUrl("https://tiktok.com/@nomorecraft");
     setIsFeatured(true);
-    setIsSold(false);
+    setStockStatus("Ready Stock");
     setEditingWork(null);
   };
 
@@ -85,7 +88,7 @@ export default function AdminKelolaGaleriPage() {
     setShopeeUrl(work.shopeeUrl || "https://shopee.co.id/nomorecraft");
     setTiktokShopUrl(work.tiktokShopUrl || "https://tiktok.com/@nomorecraft");
     setIsFeatured(work.isFeatured ?? true);
-    setIsSold(work.isSold);
+    setStockStatus(work.stockStatus || (work.isSold ? "Sold Out" : "Ready Stock"));
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -93,6 +96,8 @@ export default function AdminKelolaGaleriPage() {
   const handleSaveWork = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !imageUrl) return;
+
+    const isSold = stockStatus === "Sold Out";
 
     if (editingWork) {
       // UPDATE existing work
@@ -108,6 +113,7 @@ export default function AdminKelolaGaleriPage() {
         buyLink: shopeeUrl,
         isFeatured,
         isSold,
+        stockStatus,
       };
 
       try {
@@ -134,6 +140,7 @@ export default function AdminKelolaGaleriPage() {
         tiktokShopUrl,
         price,
         isSold,
+        stockStatus,
         isFeatured,
       };
 
@@ -189,7 +196,7 @@ export default function AdminKelolaGaleriPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Galeri Karya</h1>
             <p className="text-sm text-zinc-400">
-              Tambah, edit detail/harga, upload foto karya, dan hapus karya yang tersimpan di database Supabase.
+              Tambah, edit detail/harga, tag status stok (Ready Stock / Pre-Order / Sold Out), upload foto, dan kelola karya di Supabase database.
             </p>
           </div>
 
@@ -204,7 +211,7 @@ export default function AdminKelolaGaleriPage() {
         {/* Create / Edit Form */}
         <form
           onSubmit={handleSaveWork}
-          className={`p-6 sm:p-8 rounded-3xl border transition-all space-y-4 ${
+          className={`p-6 sm:p-8 rounded-3xl border transition-all space-y-5 ${
             editingWork
               ? "bg-rose-950/30 border-rose-500/60 shadow-lg"
               : "bg-zinc-900 border-zinc-800"
@@ -305,7 +312,7 @@ export default function AdminKelolaGaleriPage() {
                 placeholder="https://shopee.co.id/..."
                 value={shopeeUrl}
                 onChange={(e) => setShopeeUrl(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
@@ -321,6 +328,68 @@ export default function AdminKelolaGaleriPage() {
             </div>
           </div>
 
+          {/* Status Ketersediaan & Stock Tag Selector */}
+          <div className="space-y-2 pt-2 border-t border-zinc-800">
+            <label className="block text-xs font-bold text-zinc-300">
+              Status Stok & Ketersediaan Produk *
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setStockStatus("Ready Stock")}
+                className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+                  stockStatus === "Ready Stock"
+                    ? "bg-emerald-950/60 border-emerald-500 text-emerald-300 shadow-md ring-1 ring-emerald-500"
+                    : "bg-zinc-800/60 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <div className={`p-2 rounded-xl ${stockStatus === "Ready Stock" ? "bg-emerald-500 text-white" : "bg-zinc-700 text-zinc-400"}`}>
+                  <PackageCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold">Ready Stock ✨</p>
+                  <p className="text-[11px] opacity-75">Siap langsung dikirim</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStockStatus("Pre-Order")}
+                className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+                  stockStatus === "Pre-Order"
+                    ? "bg-indigo-950/60 border-indigo-500 text-indigo-300 shadow-md ring-1 ring-indigo-500"
+                    : "bg-zinc-800/60 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <div className={`p-2 rounded-xl ${stockStatus === "Pre-Order" ? "bg-indigo-500 text-white" : "bg-zinc-700 text-zinc-400"}`}>
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold">Pre-Order (PO) ⏳</p>
+                  <p className="text-[11px] opacity-75">Dibuat sesuai pesanan</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStockStatus("Sold Out")}
+                className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+                  stockStatus === "Sold Out"
+                    ? "bg-rose-950/60 border-rose-500 text-rose-300 shadow-md ring-1 ring-rose-500"
+                    : "bg-zinc-800/60 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <div className={`p-2 rounded-xl ${stockStatus === "Sold Out" ? "bg-rose-500 text-white" : "bg-zinc-700 text-zinc-400"}`}>
+                  <Ban className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold">Sold Out ❌</p>
+                  <p className="text-[11px] opacity-75">Stok habis / arsip</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center gap-6 pt-2">
             <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-zinc-200">
               <input
@@ -330,22 +399,11 @@ export default function AdminKelolaGaleriPage() {
                 className="w-4 h-4 rounded text-rose-500 bg-zinc-800 border-zinc-700"
               />
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-              <span>Tampilkan di Featured Home</span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-zinc-200">
-              <input
-                type="checkbox"
-                checked={isSold}
-                onChange={(e) => setIsSold(e.target.checked)}
-                className="w-4 h-4 rounded text-rose-500 bg-zinc-800 border-zinc-700"
-              />
-              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-400">Sold Out</span>
-              <span>Tandai Sebagai Terjual</span>
+              <span>Tampilkan sebagai Karya Unggulan (Featured)</span>
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3">
+          <div className="flex justify-end gap-3 pt-3 border-t border-zinc-800">
             {editingWork && (
               <button
                 type="button"
@@ -360,7 +418,7 @@ export default function AdminKelolaGaleriPage() {
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
             >
               {editingWork ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              <span>{editingWork ? "Simpan ke Database Supabase" : "Tambah Karya Ke Database Supabase"}</span>
+              <span>{editingWork ? "Simpan Perubahan ke Supabase" : "Tambah Karya Ke Supabase"}</span>
             </button>
           </div>
         </form>
@@ -409,66 +467,83 @@ export default function AdminKelolaGaleriPage() {
             <p className="text-sm text-zinc-400">Memuat karya dari Supabase...</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredWorks.map((w) => (
-                <div
-                  key={w.id}
-                  className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between hover:border-zinc-700 transition-all"
-                >
-                  <div>
-                    <div className="aspect-[4/3] bg-zinc-950 relative">
-                      <img
-                        src={w.imageUrl}
-                        alt={w.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow">
-                          {w.categoryName}
+              {filteredWorks.map((w) => {
+                const itemStatus = w.stockStatus || (w.isSold ? "Sold Out" : "Ready Stock");
+                return (
+                  <div
+                    key={w.id}
+                    className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between hover:border-zinc-700 transition-all"
+                  >
+                    <div>
+                      <div className="aspect-[4/3] bg-zinc-950 relative">
+                        <img
+                          src={w.imageUrl}
+                          alt={w.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow">
+                            {w.categoryName}
+                          </span>
+                          {w.isFeatured && (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-zinc-950">
+                              Featured ⭐
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Status Stock Badge */}
+                        <div className="absolute top-3 right-3">
+                          {itemStatus === "Ready Stock" && (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 backdrop-blur-md">
+                              Ready Stock ✨
+                            </span>
+                          )}
+                          {itemStatus === "Pre-Order" && (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-500/50 backdrop-blur-md">
+                              Pre-Order ⏳
+                            </span>
+                          )}
+                          {itemStatus === "Sold Out" && (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/50 backdrop-blur-md">
+                              Sold Out ❌
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-5 space-y-1">
+                        <h3 className="text-base font-bold text-white">{w.title}</h3>
+                        <p className="text-xs text-zinc-400 line-clamp-2">{w.description}</p>
+                        <span className="text-sm font-extrabold text-rose-400 block pt-1">
+                          {w.price}
                         </span>
-                        {w.isSold && (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-950/80 text-amber-400 border border-amber-400/30">
-                            Sold Out
-                          </span>
-                        )}
-                        {w.isFeatured && (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-zinc-950">
-                            Featured ⭐
-                          </span>
-                        )}
                       </div>
                     </div>
-                    <div className="p-5 space-y-1">
-                      <h3 className="text-base font-bold text-white">{w.title}</h3>
-                      <p className="text-xs text-zinc-400 line-clamp-2">{w.description}</p>
-                      <span className="text-sm font-extrabold text-rose-400 block pt-1">
-                        {w.price}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="p-4 border-t border-zinc-800/80 flex items-center justify-between">
-                    <span className="text-[11px] text-zinc-500">
-                      ID: #{w.id}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditClick(w)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400 bg-amber-950/40 hover:bg-amber-900/60 transition-colors"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteWork(w.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Hapus</span>
-                      </button>
+                    <div className="p-4 border-t border-zinc-800/80 flex items-center justify-between">
+                      <span className="text-[11px] text-zinc-500">
+                        ID: #{w.id}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditClick(w)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400 bg-amber-950/40 hover:bg-amber-900/60 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteWork(w.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

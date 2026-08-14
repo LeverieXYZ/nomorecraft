@@ -30,6 +30,7 @@ export interface Work {
   tiktokShopUrl?: string;
   price: string;
   isSold: boolean;
+  stockStatus?: "Ready Stock" | "Pre-Order" | "Sold Out";
   isFeatured?: boolean;
   createdAt?: string;
 }
@@ -180,6 +181,7 @@ export const MOCK_WORKS: Work[] = [
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 65.000",
     isSold: false,
+    stockStatus: "Ready Stock",
     isFeatured: true,
     createdAt: "2026-08-01",
   },
@@ -195,6 +197,7 @@ export const MOCK_WORKS: Work[] = [
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 75.000",
     isSold: false,
+    stockStatus: "Pre-Order",
     isFeatured: true,
     createdAt: "2026-08-05",
   },
@@ -210,6 +213,7 @@ export const MOCK_WORKS: Work[] = [
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 89.000",
     isSold: false,
+    stockStatus: "Ready Stock",
     isFeatured: true,
     createdAt: "2026-08-02",
   },
@@ -225,6 +229,7 @@ export const MOCK_WORKS: Work[] = [
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 45.000",
     isSold: false,
+    stockStatus: "Ready Stock",
     isFeatured: false,
     createdAt: "2026-08-07",
   },
@@ -240,6 +245,7 @@ export const MOCK_WORKS: Work[] = [
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 120.000",
     isSold: false,
+    stockStatus: "Pre-Order",
     isFeatured: true,
     createdAt: "2026-08-03",
   },
@@ -255,6 +261,7 @@ export const MOCK_WORKS: Work[] = [
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 28.000",
     isSold: true,
+    stockStatus: "Sold Out",
     isFeatured: false,
     createdAt: "2026-08-08",
   },

@@ -474,21 +474,26 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
     }
     const { data, error } = await query;
     if (!error && data && data.length > 0) {
-      return data.map((w: any) => ({
-        id: w.id,
-        categoryId: w.category_id,
-        categoryName: catMap.get(w.category_id) || "Kerajinan",
-        title: w.title,
-        description: w.description,
-        imageUrl: w.image_url,
-        buyLink: w.buy_link,
-        shopeeUrl: w.shopee_url,
-        tiktokShopUrl: w.tiktok_shop_url,
-        price: w.price,
-        isSold: Boolean(w.is_sold),
-        isFeatured: Boolean(w.is_featured),
-        createdAt: w.created_at,
-      }));
+      return data.map((w: any) => {
+        const isSoldBool = Boolean(w.is_sold);
+        const resolvedStatus = (w.stock_status || (isSoldBool ? "Sold Out" : "Ready Stock")) as "Ready Stock" | "Pre-Order" | "Sold Out";
+        return {
+          id: w.id,
+          categoryId: w.category_id,
+          categoryName: catMap.get(w.category_id) || "Kerajinan",
+          title: w.title,
+          description: w.description,
+          imageUrl: w.image_url,
+          buyLink: w.buy_link,
+          shopeeUrl: w.shopee_url,
+          tiktokShopUrl: w.tiktok_shop_url,
+          price: w.price,
+          isSold: resolvedStatus === "Sold Out" || isSoldBool,
+          stockStatus: resolvedStatus,
+          isFeatured: Boolean(w.is_featured),
+          createdAt: w.created_at,
+        };
+      });
     }
     ensureSupabaseSeeded();
   }
@@ -512,6 +517,7 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
         tiktokShopUrl: w.tiktokShopUrl || undefined,
         price: w.price,
         isSold: Boolean(w.isSold),
+        stockStatus: (w.isSold ? "Sold Out" : "Ready Stock") as "Ready Stock" | "Pre-Order" | "Sold Out",
         isFeatured: Boolean(w.isFeatured),
         createdAt: w.createdAt || undefined,
       }));
@@ -536,6 +542,7 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
       description: "Kategori kerajinan",
     });
 
+    const isSoldFinal = work.stockStatus === "Sold Out" || Boolean(work.isSold);
     const insertPayload = {
       category_id: catId,
       title: work.title || "Karya Baru",
@@ -545,7 +552,7 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
       shopee_url: work.shopeeUrl || "https://shopee.co.id/nomorecraft",
       tiktok_shop_url: work.tiktokShopUrl || "https://tiktok.com/@nomorecraft",
       price: work.price || "Rp 0",
-      is_sold: Boolean(work.isSold),
+      is_sold: isSoldFinal,
       is_featured: work.isFeatured !== undefined ? Boolean(work.isFeatured) : true,
     };
 
@@ -567,7 +574,7 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
       shopeeUrl: work.shopeeUrl,
       tiktokShopUrl: work.tiktokShopUrl,
       price: work.price || "Rp 0",
-      isSold: Boolean(work.isSold),
+      isSold: work.stockStatus === "Sold Out" || Boolean(work.isSold),
       isFeatured: work.isFeatured !== undefined ? Boolean(work.isFeatured) : true,
     });
     return true;
@@ -589,7 +596,11 @@ export async function updateWork(id: number, work: Partial<Work>): Promise<boole
     if (work.shopeeUrl !== undefined) payload.shopee_url = work.shopeeUrl;
     if (work.tiktokShopUrl !== undefined) payload.tiktok_shop_url = work.tiktokShopUrl;
     if (work.price !== undefined) payload.price = work.price;
-    if (work.isSold !== undefined) payload.is_sold = Boolean(work.isSold);
+    if (work.stockStatus !== undefined) {
+      payload.is_sold = work.stockStatus === "Sold Out";
+    } else if (work.isSold !== undefined) {
+      payload.is_sold = Boolean(work.isSold);
+    }
     if (work.isFeatured !== undefined) payload.is_featured = Boolean(work.isFeatured);
 
     const { error } = await supabase.from("works").update(payload).eq("id", id);
@@ -612,7 +623,7 @@ export async function updateWork(id: number, work: Partial<Work>): Promise<boole
         shopeeUrl: work.shopeeUrl,
         tiktokShopUrl: work.tiktokShopUrl,
         price: work.price,
-        isSold: work.isSold !== undefined ? Boolean(work.isSold) : undefined,
+        isSold: work.stockStatus !== undefined ? work.stockStatus === "Sold Out" : work.isSold !== undefined ? Boolean(work.isSold) : undefined,
         isFeatured: work.isFeatured !== undefined ? Boolean(work.isFeatured) : undefined,
       })
       .where(eq(worksTable.id, id));
