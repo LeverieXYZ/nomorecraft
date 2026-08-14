@@ -228,40 +228,70 @@ export async function fetchSettings(): Promise<SiteSettings> {
 export async function updateSettings(data: Partial<SiteSettings>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const payload: Record<string, any> = { id: 1 };
-    if (data.siteName !== undefined) payload.site_name = data.siteName;
-    if (data.tagline !== undefined) payload.tagline = data.tagline;
-    if (data.heroTitle !== undefined) payload.hero_title = data.heroTitle;
-    if (data.heroSubtitle !== undefined) payload.hero_subtitle = data.heroSubtitle;
-    if (data.heroImageUrl !== undefined) payload.hero_image_url = data.heroImageUrl;
-    if (data.aboutText !== undefined) payload.about_text = data.aboutText;
-    if (data.ownerName !== undefined) payload.owner_name = data.ownerName;
-    if (data.whatsappNumber !== undefined) payload.whatsapp_number = data.whatsappNumber;
+    try {
+      // 1. Fetch existing settings row if available
+      const { data: existing } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("id", 1)
+        .maybeSingle();
 
-    // Use UPSERT so it works even if id: 1 does not exist yet!
-    const { error } = await supabase.from("settings").upsert(payload);
-    if (error) {
-      console.error("Supabase updateSettings error:", error);
+      // 2. Build full payload guaranteeing NO NOT-NULL constraint violations
+      const fullPayload = {
+        id: 1,
+        site_name: data.siteName ?? existing?.site_name ?? MOCK_SETTINGS.siteName,
+        tagline: data.tagline ?? existing?.tagline ?? MOCK_SETTINGS.tagline,
+        hero_title: data.heroTitle ?? existing?.hero_title ?? MOCK_SETTINGS.heroTitle,
+        hero_subtitle: data.heroSubtitle ?? existing?.hero_subtitle ?? MOCK_SETTINGS.heroSubtitle,
+        hero_image_url: data.heroImageUrl ?? existing?.hero_image_url ?? MOCK_SETTINGS.heroImageUrl,
+        about_text: data.aboutText ?? existing?.about_text ?? MOCK_SETTINGS.aboutText,
+        owner_name: data.ownerName ?? existing?.owner_name ?? MOCK_SETTINGS.ownerName,
+        whatsapp_number: data.whatsappNumber ?? existing?.whatsapp_number ?? MOCK_SETTINGS.whatsappNumber,
+      };
+
+      console.log("Supabase updateSettings payload:", JSON.stringify(fullPayload).substring(0, 300));
+      const { error } = await supabase.from("settings").upsert(fullPayload);
+      if (error) {
+        console.error("Supabase updateSettings error:", JSON.stringify(error));
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("updateSettings exception:", err);
       return false;
     }
-    return true;
   }
 
   // Local dev only
   try {
-    await db
-      .update(settingsTable)
-      .set({
-        siteName: data.siteName,
-        tagline: data.tagline,
-        heroTitle: data.heroTitle,
-        heroSubtitle: data.heroSubtitle,
-        heroImageUrl: data.heroImageUrl,
-        aboutText: data.aboutText,
-        ownerName: data.ownerName,
-        whatsappNumber: data.whatsappNumber,
-      })
-      .where(eq(settingsTable.id, 1));
+    const existing = await db.select().from(settingsTable).where(eq(settingsTable.id, 1));
+    if (!existing || existing.length === 0) {
+      await db.insert(settingsTable).values({
+        id: 1,
+        siteName: data.siteName || MOCK_SETTINGS.siteName,
+        tagline: data.tagline || MOCK_SETTINGS.tagline,
+        heroTitle: data.heroTitle || MOCK_SETTINGS.heroTitle,
+        heroSubtitle: data.heroSubtitle || MOCK_SETTINGS.heroSubtitle,
+        heroImageUrl: data.heroImageUrl || MOCK_SETTINGS.heroImageUrl,
+        aboutText: data.aboutText || MOCK_SETTINGS.aboutText,
+        ownerName: data.ownerName || MOCK_SETTINGS.ownerName,
+        whatsappNumber: data.whatsappNumber || MOCK_SETTINGS.whatsappNumber,
+      });
+    } else {
+      await db
+        .update(settingsTable)
+        .set({
+          siteName: data.siteName ?? existing[0].siteName,
+          tagline: data.tagline ?? existing[0].tagline,
+          heroTitle: data.heroTitle ?? existing[0].heroTitle,
+          heroSubtitle: data.heroSubtitle ?? existing[0].heroSubtitle,
+          heroImageUrl: data.heroImageUrl ?? existing[0].heroImageUrl,
+          aboutText: data.aboutText ?? existing[0].aboutText,
+          ownerName: data.ownerName ?? existing[0].ownerName,
+          whatsappNumber: data.whatsappNumber ?? existing[0].whatsappNumber,
+        })
+        .where(eq(settingsTable.id, 1));
+    }
     return true;
   } catch (err) {
     console.error("SQLite updateSettings error:", err);
@@ -497,7 +527,6 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
 export async function createWork(work: Partial<Work>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    // Ensure category exists first
     const catId = Number(work.categoryId) || 1;
     await supabase.from("categories").upsert({
       id: catId,
@@ -662,7 +691,6 @@ export async function createBlogPost(post: Partial<BlogPost>): Promise<boolean> 
 
   const supabase = getSupabase();
   if (supabase) {
-    // Ensure category exists
     const catId = Number(post.blogCategoryId) || 1;
     await supabase.from("blog_categories").upsert({
       id: catId,
