@@ -8,6 +8,9 @@ import {
   deleteHeroBanner,
 } from "@/db/services";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const [heroSettings, bannersList] = await Promise.all([
@@ -15,12 +18,20 @@ export async function GET() {
       fetchHeroBanners(),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      settings: heroSettings,
-      banners: bannersList,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        settings: heroSettings,
+        banners: bannersList,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error: any) {
+    console.error("GET /api/cms/beranda error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -41,21 +52,31 @@ export async function PUT(req: Request) {
         whatsappNumber: data.whatsappNumber,
       });
 
-      return NextResponse.json({ success: ok, message: "Hero settings updated in database" });
+      if (!ok) {
+        return NextResponse.json({ success: false, error: "Failed to update settings in Supabase. Check server logs." }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, message: "Hero settings updated in database" });
     }
 
     if (action === "UPDATE_BANNER") {
       const ok = await updateHeroBanner(data.id, data);
-      return NextResponse.json({ success: ok, message: "Banner updated in database" });
+      if (!ok) {
+        return NextResponse.json({ success: false, error: "Failed to update banner in Supabase. Check server logs." }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, message: "Banner updated in database" });
     }
 
     if (action === "TOGGLE_BANNER") {
       const ok = await updateHeroBanner(data.id, { isActive: data.isActive });
-      return NextResponse.json({ success: ok, message: "Banner status updated" });
+      if (!ok) {
+        return NextResponse.json({ success: false, error: "Failed to toggle banner status." }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, message: "Banner status updated" });
     }
 
     return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   } catch (error: any) {
+    console.error("PUT /api/cms/beranda error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -64,8 +85,12 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const ok = await createHeroBanner(body);
-    return NextResponse.json({ success: ok });
+    if (!ok) {
+      return NextResponse.json({ success: false, error: "Failed to create banner in Supabase. Check server logs." }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, message: "Banner created successfully" });
   } catch (error: any) {
+    console.error("POST /api/cms/beranda error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -80,8 +105,12 @@ export async function DELETE(req: Request) {
     }
 
     const ok = await deleteHeroBanner(parseInt(id, 10));
-    return NextResponse.json({ success: ok, message: "Banner deleted from database" });
+    if (!ok) {
+      return NextResponse.json({ success: false, error: "Failed to delete banner from Supabase." }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, message: "Banner deleted from database" });
   } catch (error: any) {
+    console.error("DELETE /api/cms/beranda error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

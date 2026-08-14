@@ -1,28 +1,11 @@
-import { drizzle } from "drizzle-orm/libsql";
 import { createClient as createLibsqlClient } from "@libsql/client";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
-import {
-  MOCK_BANNERS,
-  MOCK_CATEGORIES,
-  MOCK_WORKS,
-  MOCK_BLOG_CATEGORIES,
-  MOCK_BLOG_POSTS,
-  MOCK_TIKTOK_VIDEOS,
-  MOCK_SHOP_PRODUCTS,
-  MOCK_SOCIAL_LINKS,
-  MOCK_SHOP_LINKS,
-  MOCK_SETTINGS,
-} from "@/data/mockData";
 
-// Initialize SQLite client for local development
-const libsqlClient = createLibsqlClient({
-  url: process.env.DATABASE_URL || "file:sqlite.db",
-});
-
-export const db = drizzle(libsqlClient, { schema });
-
-// Initialize Supabase Client (supporting all standard Vercel & Supabase env key variations)
+// ---------------------------------------------------------------------------
+// Supabase Client (Primary — used in production on Vercel)
+// ---------------------------------------------------------------------------
 export const getSupabase = () => {
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -42,10 +25,85 @@ export const getSupabase = () => {
   });
 };
 
-// Initialize database tables and seed data
+// ---------------------------------------------------------------------------
+// SQLite / libSQL Client (Local development fallback only)
+// ---------------------------------------------------------------------------
+let libsqlClient: ReturnType<typeof createLibsqlClient> | null = null;
+let dbInstance: ReturnType<typeof drizzle> | null = null;
+
+function getLibsqlClient() {
+  if (!libsqlClient) {
+    try {
+      libsqlClient = createLibsqlClient({
+        url: process.env.DATABASE_URL || "file:sqlite.db",
+      });
+    } catch (err) {
+      console.warn("Failed to create libsql client (expected in production):", (err as Error).message);
+      return null;
+    }
+  }
+  return libsqlClient;
+}
+
+export function getDb() {
+  if (!dbInstance) {
+    const client = getLibsqlClient();
+    if (!client) return null;
+    dbInstance = drizzle(client, { schema });
+  }
+  return dbInstance;
+}
+
+// Legacy export for backward compatibility — returns drizzle instance or throws
+export const db = (() => {
+  // Lazy proxy: defer actual creation until first property access
+  const handler: ProxyHandler<object> = {
+    get(_target, prop) {
+      const instance = getDb();
+      if (!instance) {
+        throw new Error(
+          "SQLite database not available. In production, use Supabase via getSupabase()."
+        );
+      }
+      return (instance as any)[prop];
+    },
+  };
+  return new Proxy({}, handler) as ReturnType<typeof drizzle>;
+})();
+
+// ---------------------------------------------------------------------------
+// Initialize local SQLite tables & seed data (development only)
+// ---------------------------------------------------------------------------
 export async function initDatabase() {
+  // Skip entirely in production — Supabase tables are managed via SQL Editor
+  const supabase = getSupabase();
+  if (supabase) {
+    console.log("Supabase detected — skipping local SQLite initialization.");
+    return;
+  }
+
+  const client = getLibsqlClient();
+  if (!client) {
+    console.warn("No SQLite client available — skipping initDatabase.");
+    return;
+  }
+
+  // Dynamic import to avoid bundling mock data in production
+  const {
+    MOCK_BANNERS,
+    MOCK_CATEGORIES,
+    MOCK_WORKS,
+    MOCK_BLOG_CATEGORIES,
+    MOCK_BLOG_POSTS,
+    MOCK_TIKTOK_VIDEOS,
+    MOCK_SHOP_PRODUCTS,
+    MOCK_SOCIAL_LINKS,
+    MOCK_SHOP_LINKS,
+    MOCK_SETTINGS,
+  } = await import("@/data/mockData");
+
   try {
-    await libsqlClient.executeMultiple(`
+    await client.executeMultiple(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -154,10 +212,10 @@ export async function initDatabase() {
       );
     `);
 
-    const bannerCount = await libsqlClient.execute("SELECT count(*) as count FROM hero_banners");
+    const bannerCount = await client.execute("SELECT count(*) as count FROM hero_banners");
     if (Number(bannerCount.rows[0]?.count || 0) === 0) {
       // Seed Settings
-      await libsqlClient.execute({
+      await client.execute({
         sql: `INSERT INTO settings (id, site_name, tagline, hero_title, hero_subtitle, hero_image_url, about_text, owner_name, whatsapp_number)
               VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
@@ -172,100 +230,64 @@ export async function initDatabase() {
         ],
       });
 
-      // Seed Banners
       for (const b of MOCK_BANNERS) {
-        await libsqlClient.execute({
-          sql: `INSERT INTO hero_banners (title, subtitle, image_url, button_text, button_link, is_active, badge_text)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        await client.execute({
+          sql: `INSERT INTO hero_banners (title, subtitle, image_url, button_text, button_link, is_active, badge_text) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           args: [b.title, b.subtitle, b.imageUrl, b.buttonText, b.buttonLink, b.isActive ? 1 : 0, b.badgeText || ""],
         });
       }
 
-      // Seed Categories
       for (const c of MOCK_CATEGORIES) {
-        await libsqlClient.execute({
+        await client.execute({
           sql: `INSERT INTO categories (id, name, slug, icon, description) VALUES (?, ?, ?, ?, ?)`,
           args: [c.id, c.name, c.slug, c.icon, c.description],
         });
       }
 
-      // Seed Works
       for (const w of MOCK_WORKS) {
-        await libsqlClient.execute({
-          sql: `INSERT INTO works (id, category_id, title, description, image_url, buy_link, shopee_url, tiktok_shop_url, price, is_sold, is_featured)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          args: [
-            w.id,
-            w.categoryId,
-            w.title,
-            w.description,
-            w.imageUrl,
-            w.buyLink,
-            w.shopeeUrl || "",
-            w.tiktokShopUrl || "",
-            w.price,
-            w.isSold ? 1 : 0,
-            w.isFeatured ? 1 : 0,
-          ],
+        await client.execute({
+          sql: `INSERT INTO works (id, category_id, title, description, image_url, buy_link, shopee_url, tiktok_shop_url, price, is_sold, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [w.id, w.categoryId, w.title, w.description, w.imageUrl, w.buyLink, w.shopeeUrl || "", w.tiktokShopUrl || "", w.price, w.isSold ? 1 : 0, w.isFeatured ? 1 : 0],
         });
       }
 
-      // Seed Blog Categories
       for (const bc of MOCK_BLOG_CATEGORIES) {
-        await libsqlClient.execute({
+        await client.execute({
           sql: `INSERT INTO blog_categories (id, name, slug) VALUES (?, ?, ?)`,
           args: [bc.id, bc.name, bc.slug],
         });
       }
 
-      // Seed Blog Posts
       for (const bp of MOCK_BLOG_POSTS) {
-        await libsqlClient.execute({
-          sql: `INSERT INTO blog_posts (id, blog_category_id, title, slug, excerpt, content, cover_image_url, published_at, read_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          args: [
-            bp.id,
-            bp.blogCategoryId,
-            bp.title,
-            bp.slug,
-            bp.excerpt,
-            bp.content,
-            bp.coverImageUrl,
-            bp.publishedAt,
-            bp.readTime,
-          ],
+        await client.execute({
+          sql: `INSERT INTO blog_posts (id, blog_category_id, title, slug, excerpt, content, cover_image_url, published_at, read_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [bp.id, bp.blogCategoryId, bp.title, bp.slug, bp.excerpt, bp.content, bp.coverImageUrl, bp.publishedAt, bp.readTime],
         });
       }
 
-      // Seed TikTok Videos
       for (const tv of MOCK_TIKTOK_VIDEOS) {
-        await libsqlClient.execute({
-          sql: `INSERT INTO tiktok_videos (id, video_url, embed_url, title, is_featured, sort_order, thumbnail_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        await client.execute({
+          sql: `INSERT INTO tiktok_videos (id, video_url, embed_url, title, is_featured, sort_order, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           args: [tv.id, tv.videoUrl, tv.embedUrl, tv.title, tv.isFeatured ? 1 : 0, tv.sortOrder, tv.thumbnailUrl],
         });
       }
 
-      // Seed Shop Products
       for (const sp of MOCK_SHOP_PRODUCTS) {
-        await libsqlClient.execute({
-          sql: `INSERT INTO shop_products (id, work_id, name, price, stock_status, shopee_url, tiktokshop_url, image_url)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        await client.execute({
+          sql: `INSERT INTO shop_products (id, work_id, name, price, stock_status, shopee_url, tiktokshop_url, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           args: [sp.id, sp.workId, sp.name, sp.price, sp.stockStatus, sp.shopeeUrl, sp.tiktokshopUrl, sp.imageUrl],
         });
       }
 
-      // Seed Social Links
       for (const sl of MOCK_SOCIAL_LINKS) {
-        await libsqlClient.execute({
+        await client.execute({
           sql: `INSERT INTO social_links (id, platform, username, url) VALUES (?, ?, ?, ?)`,
           args: [sl.id, sl.platform, sl.username, sl.url],
         });
       }
 
-      // Seed Shop Links
       for (const sl of MOCK_SHOP_LINKS) {
-        await libsqlClient.execute({
+        await client.execute({
           sql: `INSERT INTO shop_links (id, platform, shop_name, url) VALUES (?, ?, ?, ?)`,
           args: [sl.id, sl.platform, sl.shopName, sl.url],
         });

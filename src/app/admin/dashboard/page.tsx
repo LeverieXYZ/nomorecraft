@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { Sparkles, Layers, BookOpen, Video, ShoppingBag, ArrowRight } from "lucide-react";
+import { Sparkles, Layers, BookOpen, Video, ShoppingBag, ArrowRight, Database, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
@@ -13,7 +13,12 @@ export default function AdminDashboardPage() {
     shop: 0,
   });
 
-  useEffect(() => {
+  const [dbStatus, setDbStatus] = useState<any>(null);
+  const [checkingDb, setCheckingDb] = useState(false);
+  const [seedingDb, setSeedingDb] = useState(false);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
+
+  const fetchStats = () => {
     fetch("/api/beranda")
       .then((res) => res.json())
       .then((json) => {
@@ -27,6 +32,44 @@ export default function AdminDashboardPage() {
         }
       })
       .catch(() => {});
+  };
+
+  const handleCheckDb = async () => {
+    setCheckingDb(true);
+    setSeedResult(null);
+    try {
+      const res = await fetch("/api/debug/supabase");
+      const json = await res.json();
+      setDbStatus(json);
+    } catch (err: any) {
+      setDbStatus({ success: false, error: err.message });
+    } finally {
+      setCheckingDb(false);
+    }
+  };
+
+  const handleSeedDb = async () => {
+    if (!confirm("Apakah Anda yakin ingin mengisi data awal ke tabel Supabase yang kosong? Data yang sudah ada tidak akan terhapus.")) return;
+    setSeedingDb(true);
+    setSeedResult(null);
+    try {
+      const res = await fetch("/api/seed", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        setSeedResult("✅ Data awal berhasil di-seed ke Supabase!");
+        fetchStats();
+      } else {
+        setSeedResult(`❌ Gagal seed: ${json.error || "Cek konfigurasi environment variables"}`);
+      }
+    } catch (err: any) {
+      setSeedResult(`❌ Gagal: ${err.message}`);
+    } finally {
+      setSeedingDb(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
   }, []);
 
   const stats = [
@@ -50,6 +93,77 @@ export default function AdminDashboardPage() {
           <p className="text-sm text-zinc-400">
             Kelola seluruh konten website No More Craft yang terhubung langsung dengan Supabase PostgreSQL database.
           </p>
+        </div>
+
+        {/* Supabase Connection & Seed Widget */}
+        <div className="bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 sm:p-7 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-800/40 text-emerald-400">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white">Status Koneksi Supabase Database</h2>
+                <p className="text-xs text-zinc-400">
+                  Pastikan seluruh data CRUD tersimpan langsung ke cloud database Supabase.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCheckDb}
+                disabled={checkingDb}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${checkingDb ? "animate-spin" : ""}`} />
+                <span>{checkingDb ? "Memeriksa..." : "Tes Koneksi"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSeedDb}
+                disabled={seedingDb}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition-colors disabled:opacity-50"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>{seedingDb ? "Mengisi Data..." : "Seed Data Awal"}</span>
+              </button>
+            </div>
+          </div>
+
+          {seedResult && (
+            <div className="p-3.5 rounded-xl bg-zinc-800/80 border border-zinc-700 text-xs font-semibold text-zinc-200">
+              {seedResult}
+            </div>
+          )}
+
+          {dbStatus && (
+            <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold">
+                {dbStatus.success ? (
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Supabase Terhubung dengan Sukses!</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-amber-400">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Supabase Belum Terhubung (Menggunakan SQLite / Mock)</span>
+                  </span>
+                )}
+              </div>
+              {dbStatus.env && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-zinc-400 pt-1 border-t border-zinc-800/60">
+                  <div>URL: <span className="text-zinc-200">{dbStatus.env.NEXT_PUBLIC_SUPABASE_URL}</span></div>
+                  <div>Anon Key: <span className="text-zinc-200">{dbStatus.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}</span></div>
+                  <div>Vercel: <span className="text-zinc-200">{dbStatus.env.VERCEL}</span></div>
+                  <div>Node Env: <span className="text-zinc-200">{dbStatus.env.NODE_ENV}</span></div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}
@@ -88,14 +202,14 @@ export default function AdminDashboardPage() {
             </Link>
 
             <Link
-              href="/admin/foto-kegiatan"
+              href="/admin/galeri"
               className="group bg-zinc-900 p-6 rounded-3xl border border-zinc-800 hover:border-rose-500/50 transition-all space-y-2"
             >
               <h3 className="text-base font-bold text-white group-hover:text-rose-400 transition-colors">
-                Kelola Foto Dokumentasi
+                Kelola Galeri Karya
               </h3>
               <p className="text-xs text-zinc-400">
-                Tambah dan hapus foto suasana pengerjaan kerajinan di studio.
+                Tambah karya baru, edit harga/foto HD, atau hapus katalog karya.
               </p>
             </Link>
 

@@ -35,6 +35,151 @@ import {
 import { eq } from "drizzle-orm";
 
 // ----------------------------------------------------
+// AUTO-SEED HELPER (Ensures Supabase is populated)
+// ----------------------------------------------------
+let isAutoSeeding = false;
+export async function ensureSupabaseSeeded() {
+  if (isAutoSeeding) return;
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  try {
+    isAutoSeeding = true;
+    const { data: existingSettings } = await supabase.from("settings").select("id").limit(1);
+    if (!existingSettings || existingSettings.length === 0) {
+      console.log("Supabase empty — auto-seeding initial data...");
+
+      // 1. Settings
+      await supabase.from("settings").upsert({
+        id: 1,
+        site_name: MOCK_SETTINGS.siteName,
+        tagline: MOCK_SETTINGS.tagline,
+        hero_title: MOCK_SETTINGS.heroTitle,
+        hero_subtitle: MOCK_SETTINGS.heroSubtitle,
+        hero_image_url: MOCK_SETTINGS.heroImageUrl,
+        about_text: MOCK_SETTINGS.aboutText,
+        owner_name: MOCK_SETTINGS.ownerName,
+        whatsapp_number: MOCK_SETTINGS.whatsappNumber,
+      });
+
+      // 2. Categories
+      await supabase.from("categories").upsert(
+        MOCK_CATEGORIES.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          icon: c.icon,
+          description: c.description,
+        }))
+      );
+
+      // 3. Hero Banners
+      await supabase.from("hero_banners").insert(
+        MOCK_BANNERS.map((b) => ({
+          title: b.title,
+          subtitle: b.subtitle,
+          image_url: b.imageUrl,
+          button_text: b.buttonText,
+          button_link: b.buttonLink,
+          is_active: b.isActive,
+          badge_text: b.badgeText || "Promo ✨",
+        }))
+      );
+
+      // 4. Works
+      await supabase.from("works").insert(
+        MOCK_WORKS.map((w) => ({
+          category_id: w.categoryId,
+          title: w.title,
+          description: w.description,
+          image_url: w.imageUrl,
+          buy_link: w.buyLink,
+          shopee_url: w.shopeeUrl || "",
+          tiktok_shop_url: w.tiktokShopUrl || "",
+          price: w.price,
+          is_sold: w.isSold,
+          is_featured: w.isFeatured,
+        }))
+      );
+
+      // 5. Blog Categories
+      await supabase.from("blog_categories").upsert(
+        MOCK_BLOG_CATEGORIES.map((bc) => ({
+          id: bc.id,
+          name: bc.name,
+          slug: bc.slug,
+        }))
+      );
+
+      // 6. Blog Posts
+      await supabase.from("blog_posts").insert(
+        MOCK_BLOG_POSTS.map((bp) => ({
+          blog_category_id: bp.blogCategoryId,
+          title: bp.title,
+          slug: bp.slug,
+          excerpt: bp.excerpt,
+          content: bp.content,
+          cover_image_url: bp.coverImageUrl,
+          published_at: bp.publishedAt,
+          read_time: bp.readTime,
+        }))
+      );
+
+      // 7. TikTok Videos
+      await supabase.from("tiktok_videos").insert(
+        MOCK_TIKTOK_VIDEOS.map((tv) => ({
+          video_url: tv.videoUrl,
+          embed_url: tv.embedUrl,
+          title: tv.title,
+          is_featured: tv.isFeatured,
+          sort_order: tv.sortOrder,
+          thumbnail_url: tv.thumbnailUrl,
+        }))
+      );
+
+      // 8. Shop Products
+      await supabase.from("shop_products").insert(
+        MOCK_SHOP_PRODUCTS.map((sp) => ({
+          work_id: sp.workId,
+          name: sp.name,
+          price: sp.price,
+          stock_status: sp.stockStatus,
+          shopee_url: sp.shopeeUrl,
+          tiktokshop_url: sp.tiktokshopUrl,
+          image_url: sp.imageUrl,
+        }))
+      );
+
+      // 9. Social Links
+      await supabase.from("social_links").upsert(
+        MOCK_SOCIAL_LINKS.map((sl) => ({
+          id: sl.id,
+          platform: sl.platform,
+          username: sl.username,
+          url: sl.url,
+        }))
+      );
+
+      // 10. Shop Links
+      await supabase.from("shop_links").upsert(
+        MOCK_SHOP_LINKS.map((sl) => ({
+          id: sl.id,
+          platform: sl.platform,
+          shop_name: sl.shopName,
+          url: sl.url,
+        }))
+      );
+
+      console.log("Supabase auto-seed completed successfully!");
+    }
+  } catch (err) {
+    console.error("Auto-seed error:", err);
+  } finally {
+    isAutoSeeding = false;
+  }
+}
+
+// ----------------------------------------------------
 // SETTINGS
 // ----------------------------------------------------
 export async function fetchSettings(): Promise<SiteSettings> {
@@ -53,9 +198,11 @@ export async function fetchSettings(): Promise<SiteSettings> {
         whatsappNumber: data.whatsapp_number || MOCK_SETTINGS.whatsappNumber,
       };
     }
+    // Auto-seed if table is empty
+    ensureSupabaseSeeded();
   }
 
-  // Fallback to SQLite or Mock
+  // Fallback to SQLite (local dev only)
   try {
     const res = await db.select().from(settingsTable).where(eq(settingsTable.id, 1));
     if (res && res.length > 0) {
@@ -72,7 +219,7 @@ export async function fetchSettings(): Promise<SiteSettings> {
       };
     }
   } catch (err) {
-    console.error("Error fetching settings from SQLite:", err);
+    // Ignore SQLite errors in production
   }
 
   return MOCK_SETTINGS;
@@ -81,7 +228,7 @@ export async function fetchSettings(): Promise<SiteSettings> {
 export async function updateSettings(data: Partial<SiteSettings>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const payload: any = {};
+    const payload: Record<string, any> = { id: 1 };
     if (data.siteName !== undefined) payload.site_name = data.siteName;
     if (data.tagline !== undefined) payload.tagline = data.tagline;
     if (data.heroTitle !== undefined) payload.hero_title = data.heroTitle;
@@ -91,11 +238,16 @@ export async function updateSettings(data: Partial<SiteSettings>): Promise<boole
     if (data.ownerName !== undefined) payload.owner_name = data.ownerName;
     if (data.whatsappNumber !== undefined) payload.whatsapp_number = data.whatsappNumber;
 
-    const { error } = await supabase.from("settings").update(payload).eq("id", 1);
-    if (!error) return true;
-    console.error("Supabase updateSettings error:", error);
+    // Use UPSERT so it works even if id: 1 does not exist yet!
+    const { error } = await supabase.from("settings").upsert(payload);
+    if (error) {
+      console.error("Supabase updateSettings error:", error);
+      return false;
+    }
+    return true;
   }
 
+  // Local dev only
   try {
     await db
       .update(settingsTable)
@@ -137,6 +289,8 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
         tag: b.badge_text,
       }));
     }
+    // Auto-seed if empty
+    ensureSupabaseSeeded();
   }
 
   try {
@@ -154,9 +308,7 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
         tag: b.badgeText || undefined,
       }));
     }
-  } catch (err) {
-    console.error("Error fetching banners from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_BANNERS;
 }
@@ -164,19 +316,22 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
 export async function createHeroBanner(banner: Partial<HeroBanner>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const { error } = await supabase.from("hero_banners").insert([
-      {
-        title: banner.title,
-        subtitle: banner.subtitle || "",
-        image_url: banner.imageUrl || (banner as any).image_url,
-        button_text: banner.buttonText || (banner as any).button_text || "Lihat Detail",
-        button_link: banner.buttonLink || (banner as any).button_link || "#galeri",
-        is_active: banner.isActive !== undefined ? banner.isActive : true,
-        badge_text: banner.badgeText || banner.tag || "Promo ✨",
-      },
-    ]);
-    if (!error) return true;
-    console.error("Supabase createHeroBanner error:", error);
+    const insertPayload = {
+      title: banner.title || "Banner Baru",
+      subtitle: banner.subtitle || "",
+      image_url: banner.imageUrl || (banner as any).image_url || "",
+      button_text: banner.buttonText || (banner as any).button_text || "Lihat Detail",
+      button_link: banner.buttonLink || (banner as any).button_link || "#galeri",
+      is_active: banner.isActive !== undefined ? banner.isActive : true,
+      badge_text: banner.badgeText || banner.tag || "Promo ✨",
+    };
+
+    const { error } = await supabase.from("hero_banners").insert([insertPayload]);
+    if (error) {
+      console.error("Supabase createHeroBanner error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -191,7 +346,6 @@ export async function createHeroBanner(banner: Partial<HeroBanner>): Promise<boo
     });
     return true;
   } catch (err) {
-    console.error("SQLite createHeroBanner error:", err);
     return false;
   }
 }
@@ -199,18 +353,25 @@ export async function createHeroBanner(banner: Partial<HeroBanner>): Promise<boo
 export async function updateHeroBanner(id: number, banner: Partial<HeroBanner>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const payload: any = {};
+    const payload: Record<string, any> = {};
     if (banner.title !== undefined) payload.title = banner.title;
     if (banner.subtitle !== undefined) payload.subtitle = banner.subtitle;
-    if (banner.imageUrl || (banner as any).image_url) payload.image_url = banner.imageUrl || (banner as any).image_url;
-    if (banner.buttonText || (banner as any).button_text) payload.button_text = banner.buttonText || (banner as any).button_text;
-    if (banner.buttonLink || (banner as any).button_link) payload.button_link = banner.buttonLink || (banner as any).button_link;
+    if (banner.imageUrl !== undefined) payload.image_url = banner.imageUrl;
+    else if ((banner as any).image_url !== undefined) payload.image_url = (banner as any).image_url;
+    if (banner.buttonText !== undefined) payload.button_text = banner.buttonText;
+    else if ((banner as any).button_text !== undefined) payload.button_text = (banner as any).button_text;
+    if (banner.buttonLink !== undefined) payload.button_link = banner.buttonLink;
+    else if ((banner as any).button_link !== undefined) payload.button_link = (banner as any).button_link;
     if (banner.isActive !== undefined) payload.is_active = banner.isActive;
-    if (banner.badgeText || banner.tag) payload.badge_text = banner.badgeText || banner.tag;
+    if (banner.badgeText !== undefined) payload.badge_text = banner.badgeText;
+    else if (banner.tag !== undefined) payload.badge_text = banner.tag;
 
     const { error } = await supabase.from("hero_banners").update(payload).eq("id", id);
-    if (!error) return true;
-    console.error("Supabase updateHeroBanner error:", error);
+    if (error) {
+      console.error("Supabase updateHeroBanner error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -228,7 +389,6 @@ export async function updateHeroBanner(id: number, banner: Partial<HeroBanner>):
       .where(eq(heroBannersTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite updateHeroBanner error:", err);
     return false;
   }
 }
@@ -237,15 +397,13 @@ export async function deleteHeroBanner(id: number): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase.from("hero_banners").delete().eq("id", id);
-    if (!error) return true;
-    console.error("Supabase deleteHeroBanner error:", error);
+    return !error;
   }
 
   try {
     await db.delete(heroBannersTable).where(eq(heroBannersTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite deleteHeroBanner error:", err);
     return false;
   }
 }
@@ -260,14 +418,13 @@ export async function fetchCategories(): Promise<Category[]> {
     if (!error && data && data.length > 0) {
       return data;
     }
+    ensureSupabaseSeeded();
   }
 
   try {
     const res = await db.select().from(categoriesTable);
     if (res && res.length > 0) return res as Category[];
-  } catch (err) {
-    console.error("Error fetching categories from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_CATEGORIES;
 }
@@ -286,7 +443,7 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
       query = query.ilike("title", `%${search}%`);
     }
     const { data, error } = await query;
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       return data.map((w: any) => ({
         id: w.id,
         categoryId: w.category_id,
@@ -303,6 +460,7 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
         createdAt: w.created_at,
       }));
     }
+    ensureSupabaseSeeded();
   }
 
   try {
@@ -328,9 +486,7 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
         createdAt: w.createdAt || undefined,
       }));
     }
-  } catch (err) {
-    console.error("Error fetching works from SQLite:", err);
-  }
+  } catch (err) {}
 
   let mock = MOCK_WORKS;
   if (categoryId) mock = mock.filter((w) => w.categoryId === categoryId);
@@ -341,22 +497,35 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
 export async function createWork(work: Partial<Work>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const { error } = await supabase.from("works").insert([
-      {
-        category_id: Number(work.categoryId) || 1,
-        title: work.title,
-        description: work.description || "",
-        image_url: work.imageUrl || (work as any).image_url,
-        buy_link: work.buyLink || work.shopeeUrl || "https://shopee.co.id/nomorecraft",
-        shopee_url: work.shopeeUrl || "https://shopee.co.id/nomorecraft",
-        tiktok_shop_url: work.tiktokShopUrl || "https://tiktok.com/@nomorecraft",
-        price: work.price || "Rp 0",
-        is_sold: Boolean(work.isSold),
-        is_featured: work.isFeatured !== undefined ? Boolean(work.isFeatured) : true,
-      },
-    ]);
-    if (!error) return true;
-    console.error("Supabase createWork error:", error);
+    // Ensure category exists first
+    const catId = Number(work.categoryId) || 1;
+    await supabase.from("categories").upsert({
+      id: catId,
+      name: work.categoryName || "Nail Art",
+      slug: (work.categoryName || "nail-art").toLowerCase().replace(/\s+/g, "-"),
+      icon: "✨",
+      description: "Kategori kerajinan",
+    });
+
+    const insertPayload = {
+      category_id: catId,
+      title: work.title || "Karya Baru",
+      description: work.description || "",
+      image_url: work.imageUrl || (work as any).image_url || "",
+      buy_link: work.buyLink || work.shopeeUrl || "https://shopee.co.id/nomorecraft",
+      shopee_url: work.shopeeUrl || "https://shopee.co.id/nomorecraft",
+      tiktok_shop_url: work.tiktokShopUrl || "https://tiktok.com/@nomorecraft",
+      price: work.price || "Rp 0",
+      is_sold: Boolean(work.isSold),
+      is_featured: work.isFeatured !== undefined ? Boolean(work.isFeatured) : true,
+    };
+
+    const { error } = await supabase.from("works").insert([insertPayload]);
+    if (error) {
+      console.error("Supabase createWork error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -374,7 +543,6 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
     });
     return true;
   } catch (err) {
-    console.error("SQLite createWork error:", err);
     return false;
   }
 }
@@ -382,21 +550,25 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
 export async function updateWork(id: number, work: Partial<Work>): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const payload: any = {};
+    const payload: Record<string, any> = {};
     if (work.categoryId !== undefined) payload.category_id = Number(work.categoryId);
     if (work.title !== undefined) payload.title = work.title;
     if (work.description !== undefined) payload.description = work.description;
-    if (work.imageUrl || (work as any).image_url) payload.image_url = work.imageUrl || (work as any).image_url;
-    if (work.buyLink) payload.buy_link = work.buyLink;
-    if (work.shopeeUrl) payload.shopee_url = work.shopeeUrl;
-    if (work.tiktokShopUrl) payload.tiktok_shop_url = work.tiktokShopUrl;
+    if (work.imageUrl !== undefined) payload.image_url = work.imageUrl;
+    else if ((work as any).image_url !== undefined) payload.image_url = (work as any).image_url;
+    if (work.buyLink !== undefined) payload.buy_link = work.buyLink;
+    if (work.shopeeUrl !== undefined) payload.shopee_url = work.shopeeUrl;
+    if (work.tiktokShopUrl !== undefined) payload.tiktok_shop_url = work.tiktokShopUrl;
     if (work.price !== undefined) payload.price = work.price;
     if (work.isSold !== undefined) payload.is_sold = Boolean(work.isSold);
     if (work.isFeatured !== undefined) payload.is_featured = Boolean(work.isFeatured);
 
     const { error } = await supabase.from("works").update(payload).eq("id", id);
-    if (!error) return true;
-    console.error("Supabase updateWork error:", error);
+    if (error) {
+      console.error("Supabase updateWork error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -417,7 +589,6 @@ export async function updateWork(id: number, work: Partial<Work>): Promise<boole
       .where(eq(worksTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite updateWork error:", err);
     return false;
   }
 }
@@ -426,15 +597,13 @@ export async function deleteWork(id: number): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase.from("works").delete().eq("id", id);
-    if (!error) return true;
-    console.error("Supabase deleteWork error:", error);
+    return !error;
   }
 
   try {
     await db.delete(worksTable).where(eq(worksTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite deleteWork error:", err);
     return false;
   }
 }
@@ -463,6 +632,7 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
         readTime: p.read_time,
       }));
     }
+    ensureSupabaseSeeded();
   }
 
   try {
@@ -481,9 +651,7 @@ export async function fetchBlogPosts(): Promise<BlogPost[]> {
         readTime: p.readTime,
       }));
     }
-  } catch (err) {
-    console.error("Error fetching blog posts from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_BLOG_POSTS;
 }
@@ -494,20 +662,31 @@ export async function createBlogPost(post: Partial<BlogPost>): Promise<boolean> 
 
   const supabase = getSupabase();
   if (supabase) {
+    // Ensure category exists
+    const catId = Number(post.blogCategoryId) || 1;
+    await supabase.from("blog_categories").upsert({
+      id: catId,
+      name: post.categoryName || "Tutorial",
+      slug: (post.categoryName || "tutorial").toLowerCase().replace(/\s+/g, "-"),
+    });
+
     const { error } = await supabase.from("blog_posts").insert([
       {
-        blog_category_id: Number(post.blogCategoryId) || 1,
+        blog_category_id: catId,
         title: post.title,
         slug,
         excerpt: post.excerpt || "",
         content: post.content || "",
-        cover_image_url: post.coverImageUrl || (post as any).cover_image_url,
+        cover_image_url: post.coverImageUrl || (post as any).cover_image_url || "",
         published_at: publishedAt,
         read_time: post.readTime || "3 min baca",
       },
     ]);
-    if (!error) return true;
-    console.error("Supabase createBlogPost error:", error);
+    if (error) {
+      console.error("Supabase createBlogPost error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -523,7 +702,6 @@ export async function createBlogPost(post: Partial<BlogPost>): Promise<boolean> 
     });
     return true;
   } catch (err) {
-    console.error("SQLite createBlogPost error:", err);
     return false;
   }
 }
@@ -532,15 +710,13 @@ export async function deleteBlogPost(id: number): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase.from("blog_posts").delete().eq("id", id);
-    if (!error) return true;
-    console.error("Supabase deleteBlogPost error:", error);
+    return !error;
   }
 
   try {
     await db.delete(blogPostsTable).where(eq(blogPostsTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite deleteBlogPost error:", err);
     return false;
   }
 }
@@ -563,6 +739,7 @@ export async function fetchTikTokVideos(): Promise<TikTokVideo[]> {
         thumbnailUrl: v.thumbnail_url,
       }));
     }
+    ensureSupabaseSeeded();
   }
 
   try {
@@ -578,9 +755,7 @@ export async function fetchTikTokVideos(): Promise<TikTokVideo[]> {
         thumbnailUrl: v.thumbnailUrl,
       }));
     }
-  } catch (err) {
-    console.error("Error fetching tiktok videos from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_TIKTOK_VIDEOS;
 }
@@ -598,8 +773,11 @@ export async function createTikTokVideo(video: Partial<TikTokVideo>): Promise<bo
         sort_order: video.sortOrder || 0,
       },
     ]);
-    if (!error) return true;
-    console.error("Supabase createTikTokVideo error:", error);
+    if (error) {
+      console.error("Supabase createTikTokVideo error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -613,7 +791,6 @@ export async function createTikTokVideo(video: Partial<TikTokVideo>): Promise<bo
     });
     return true;
   } catch (err) {
-    console.error("SQLite createTikTokVideo error:", err);
     return false;
   }
 }
@@ -622,15 +799,13 @@ export async function deleteTikTokVideo(id: number): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase.from("tiktok_videos").delete().eq("id", id);
-    if (!error) return true;
-    console.error("Supabase deleteTikTokVideo error:", error);
+    return !error;
   }
 
   try {
     await db.delete(tiktokVideosTable).where(eq(tiktokVideosTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite deleteTikTokVideo error:", err);
     return false;
   }
 }
@@ -643,14 +818,13 @@ export async function fetchSocialLinks(): Promise<SocialLink[]> {
   if (supabase) {
     const { data, error } = await supabase.from("social_links").select("*").order("id", { ascending: true });
     if (!error && data && data.length > 0) return data;
+    ensureSupabaseSeeded();
   }
 
   try {
     const res = await db.select().from(socialLinksTable);
     if (res && res.length > 0) return res as SocialLink[];
-  } catch (err) {
-    console.error("Error fetching social links from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_SOCIAL_LINKS;
 }
@@ -658,16 +832,18 @@ export async function fetchSocialLinks(): Promise<SocialLink[]> {
 export async function updateSocialLink(id: number, username: string, url: string): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const { error } = await supabase.from("social_links").update({ username, url }).eq("id", id);
-    if (!error) return true;
-    console.error("Supabase updateSocialLink error:", error);
+    const { error } = await supabase.from("social_links").upsert({ id, username, url });
+    if (error) {
+      console.error("Supabase updateSocialLink error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
     await db.update(socialLinksTable).set({ username, url }).where(eq(socialLinksTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite updateSocialLink error:", err);
     return false;
   }
 }
@@ -684,6 +860,7 @@ export async function fetchShopLinks(): Promise<ShopLink[]> {
         url: sl.url,
       }));
     }
+    ensureSupabaseSeeded();
   }
 
   try {
@@ -696,9 +873,7 @@ export async function fetchShopLinks(): Promise<ShopLink[]> {
         url: sl.url,
       }));
     }
-  } catch (err) {
-    console.error("Error fetching shop links from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_SHOP_LINKS;
 }
@@ -706,16 +881,18 @@ export async function fetchShopLinks(): Promise<ShopLink[]> {
 export async function updateShopLink(id: number, shopName: string, url: string): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
-    const { error } = await supabase.from("shop_links").update({ shop_name: shopName, url }).eq("id", id);
-    if (!error) return true;
-    console.error("Supabase updateShopLink error:", error);
+    const { error } = await supabase.from("shop_links").upsert({ id, shop_name: shopName, url });
+    if (error) {
+      console.error("Supabase updateShopLink error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
     await db.update(shopLinksTable).set({ shopName, url }).where(eq(shopLinksTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite updateShopLink error:", err);
     return false;
   }
 }
@@ -739,6 +916,7 @@ export async function fetchShopProducts(): Promise<ShopProduct[]> {
         imageUrl: sp.image_url,
       }));
     }
+    ensureSupabaseSeeded();
   }
 
   try {
@@ -755,9 +933,7 @@ export async function fetchShopProducts(): Promise<ShopProduct[]> {
         imageUrl: sp.imageUrl,
       }));
     }
-  } catch (err) {
-    console.error("Error fetching shop products from SQLite:", err);
-  }
+  } catch (err) {}
 
   return MOCK_SHOP_PRODUCTS;
 }
@@ -776,8 +952,11 @@ export async function createShopProduct(product: Partial<ShopProduct>): Promise<
         image_url: product.imageUrl || "",
       },
     ]);
-    if (!error) return true;
-    console.error("Supabase createShopProduct error:", error);
+    if (error) {
+      console.error("Supabase createShopProduct error:", error);
+      return false;
+    }
+    return true;
   }
 
   try {
@@ -792,7 +971,6 @@ export async function createShopProduct(product: Partial<ShopProduct>): Promise<
     });
     return true;
   } catch (err) {
-    console.error("SQLite createShopProduct error:", err);
     return false;
   }
 }
@@ -801,15 +979,13 @@ export async function deleteShopProduct(id: number): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     const { error } = await supabase.from("shop_products").delete().eq("id", id);
-    if (!error) return true;
-    console.error("Supabase deleteShopProduct error:", error);
+    return !error;
   }
 
   try {
     await db.delete(shopProductsTable).where(eq(shopProductsTable.id, id));
     return true;
   } catch (err) {
-    console.error("SQLite deleteShopProduct error:", err);
     return false;
   }
 }
