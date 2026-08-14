@@ -22,14 +22,24 @@ const libsqlClient = createLibsqlClient({
 
 export const db = drizzle(libsqlClient, { schema });
 
-// Initialize Supabase Client (if SUPABASE environment variables are set)
+// Initialize Supabase Client (supporting all standard Vercel & Supabase env key variations)
 export const getSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL;
+
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
     return null;
   }
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
+
+  return createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+  });
 };
 
 // Initialize database tables and seed data

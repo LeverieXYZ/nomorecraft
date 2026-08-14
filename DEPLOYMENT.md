@@ -11,35 +11,27 @@ Dokumen ini berisi panduan langkah demi langkah untuk mengimpor basis data **No 
 3. Di menu bilah samping kiri, klik **SQL Editor**.
 4. Buka file [`supabase_migration.sql`](./supabase_migration.sql) di dalam proyek ini, salin seluruh kodenya.
 5. Tempel (*paste*) kode tersebut ke dalam SQL Editor Supabase, lalu klik tombol **Run** ▶️.
-   > **Hasil**: 11 tabel lengkap (`users`, `works`, `categories`, `blog_posts`, `hero_banners`, `shop_products`, `settings`, dll) beserta data awal secara otomatis langsung terbuat dan terisi di Supabase!
+   > **Hasil**: 11 tabel lengkap (`users`, `works`, `categories`, `blog_posts`, `hero_banners`, `shop_products`, `settings`, dll) beserta reset urutan ID (*primary key sequence*) dan izin RLS (*Row Level Security*) otomatis terkonfigurasi di Supabase!
 6. Buka **Project Settings** ⚙️ -> **API**, lalu catat:
    - `Project URL` (misal: `https://xxxx.supabase.co`)
    - `anon public key` (misal: `eyJhbG...`)
-   - Connection string di tab **Database** (misal: `postgres://...`)
+   - `service_role secret key` (misal: `eyJhbG...`)
 
 ---
 
-## ☁️ Langkah 2: Deploy ke Vercel
+## ☁️ Langkah 2: Variabel Lingkungan di Vercel (Environment Variables)
 
-### Opsi A: Deploy Langsung via CLI Terminal
-Jalankan perintah berikut pada terminal Anda:
-```bash
-npx vercel
-```
-Ikuti petunjuk di layar:
-1. Konfirmasi direktori proyek.
-2. Tentukan nama proyek (misal: `nomorecraft`).
-3. Vercel akan otomatis mendeteksi framework **Next.js** dan melakukan deployment!
+Masuk ke proyek Anda di **[Vercel Dashboard](https://vercel.com)** -> **Settings** -> **Environment Variables**, pastikan variabel berikut terpasang:
 
-### Opsi B: Deploy via Vercel Dashboard (GitHub)
-1. Push repositori ini ke akun GitHub Anda.
-2. Masuk ke **[Vercel Dashboard](https://vercel.com/new)**.
-3. Klik **Import Project** dari repositori GitHub Anda.
-4. Di bagian **Environment Variables**, tambahkan variabel berikut:
-   - `NEXT_PUBLIC_SUPABASE_URL` = `https://<proyek-anda>.supabase.co`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `<anon-key-anda>`
-   - `DATABASE_URL` = `<connection-string-postgres-supabase>`
-5. Klik **Deploy** 🚀.
+| Key Variable | Value Contoh | Keterangan |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | URL Proyek Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOi...` | Public Kunci Anon |
+| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOi...` | Secret Service Role (Rekomendasi untuk penulisan server) |
+| `SUPABASE_URL` | `https://xxxx.supabase.co` | Opsi tambahan URL Supabase |
+| `SUPABASE_ANON_KEY` | `eyJhbGciOi...` | Opsi tambahan Anon Key |
+
+> **Catatan Penting**: Memasang `SUPABASE_SERVICE_ROLE_KEY` memastikan semua operasi penulisan (INSERT, UPDATE, DELETE) dari Panel Admin CMS berjalan sukses 100% tanpa terhalang kebijakan RLS.
 
 ---
 

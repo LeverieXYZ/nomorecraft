@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed Default Admin (admin@nomorecraft.com / admin123)
 INSERT INTO users (id, name, email, password_hash)
 VALUES (1, 'Admin NoMoreCraft', 'admin@nomorecraft.com', 'admin123')
 ON CONFLICT (email) DO NOTHING;
@@ -195,3 +194,33 @@ INSERT INTO settings (id, site_name, tagline, hero_title, hero_subtitle, hero_im
 VALUES 
 (1, 'No More Craft', 'Unik, Lucu & Dibuat Spesial Sepenuh Hati', 'Kreasi Handcrafted Spesial Untuk Momen Manismu', 'Temukan koleksi Nail Art kustom, Pipe Cleaner Flowers yang tak pernah layu, dan Crochet imut karya tangan penuh kasih.', 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=80', 'No More Craft berawal dari kecintaan pada karya tangan yang aesthetic dan bermakna.', 'Cherish & Team', '6281234567890')
 ON CONFLICT (id) DO NOTHING;
+
+-- ========================================================
+-- 12. RESET AUTO-INCREMENT SEQUENCES (CRITICAL FOR NEW INSERTS)
+-- ========================================================
+SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
+SELECT setval('hero_banners_id_seq', (SELECT COALESCE(MAX(id), 1) FROM hero_banners));
+SELECT setval('categories_id_seq', (SELECT COALESCE(MAX(id), 1) FROM categories));
+SELECT setval('works_id_seq', (SELECT COALESCE(MAX(id), 1) FROM works));
+SELECT setval('blog_categories_id_seq', (SELECT COALESCE(MAX(id), 1) FROM blog_categories));
+SELECT setval('blog_posts_id_seq', (SELECT COALESCE(MAX(id), 1) FROM blog_posts));
+SELECT setval('tiktok_videos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM tiktok_videos));
+SELECT setval('shop_products_id_seq', (SELECT COALESCE(MAX(id), 1) FROM shop_products));
+SELECT setval('social_links_id_seq', (SELECT COALESCE(MAX(id), 1) FROM social_links));
+SELECT setval('shop_links_id_seq', (SELECT COALESCE(MAX(id), 1) FROM shop_links));
+SELECT setval('settings_id_seq', (SELECT COALESCE(MAX(id), 1) FROM settings));
+
+-- ========================================================
+-- 13. DISABLE ROW LEVEL SECURITY (RLS) FOR UNRESTRICTED CMS UPDATES
+-- ========================================================
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE hero_banners DISABLE ROW LEVEL SECURITY;
+ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE works DISABLE ROW LEVEL SECURITY;
+ALTER TABLE blog_categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE blog_posts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tiktok_videos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE shop_products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE social_links DISABLE ROW LEVEL SECURITY;
+ALTER TABLE shop_links DISABLE ROW LEVEL SECURITY;
+ALTER TABLE settings DISABLE ROW LEVEL SECURITY;
