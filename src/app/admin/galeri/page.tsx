@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
+import ImageUploadInput from "@/components/ImageUploadInput";
 import { MOCK_CATEGORIES, Work, Category } from "@/data/mockData";
 import {
   Plus,
@@ -188,7 +189,7 @@ export default function AdminKelolaGaleriPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Galeri Karya</h1>
             <p className="text-sm text-zinc-400">
-              Tambah, edit detail/harga, dan hapus karya yang tersimpan di database Supabase.
+              Tambah, edit detail/harga, upload foto karya, dan hapus karya yang tersimpan di database Supabase.
             </p>
           </div>
 
@@ -238,7 +239,7 @@ export default function AdminKelolaGaleriPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Karya</label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Judul Karya *</label>
               <input
                 type="text"
                 required
@@ -265,7 +266,7 @@ export default function AdminKelolaGaleriPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Harga (Format: Rp xx.000)</label>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Harga (Format: Rp xx.000) *</label>
               <input
                 type="text"
                 required
@@ -277,29 +278,23 @@ export default function AdminKelolaGaleriPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">URL Foto HD Karya</label>
-              <input
-                type="url"
-                required
-                placeholder="https://images.unsplash.com/..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
+          {/* Upload / Image Input for Galeri */}
+          <ImageUploadInput
+            label="Foto Karya HD"
+            value={imageUrl}
+            onChange={setImageUrl}
+            required={true}
+          />
 
-            <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Deskripsi Singkat</label>
-              <input
-                type="text"
-                placeholder="Deskripsi bahan, gaya & kelengkapan..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-zinc-300 mb-1">Deskripsi Singkat</label>
+            <textarea
+              rows={2}
+              placeholder="Deskripsi bahan, gaya & kelengkapan..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

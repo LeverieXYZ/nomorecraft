@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
+import ImageUploadInput from "@/components/ImageUploadInput";
 import { HeroBanner } from "@/data/mockData";
 import {
   Save,
@@ -189,7 +190,7 @@ export default function AdminKelolaBerandaPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Content Beranda</h1>
             <p className="text-sm text-zinc-400">
-              Edit teks hero utama, kelola slider banner carousel, tambahkan tag khusus, dan perbarui banner yang tersimpan di Supabase.
+              Edit teks hero utama, kelola slider banner carousel, unggah foto banner, dan perbarui banner di Supabase database.
             </p>
           </div>
 
@@ -250,7 +251,7 @@ export default function AdminKelolaBerandaPage() {
           </div>
         </form>
 
-        {/* 2. Form Tambah Banner Baru dengan Opsi Tag */}
+        {/* 2. Form Tambah Banner Baru dengan Upload Photo */}
         <form onSubmit={handleAddBanner} className="bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-5 shadow-md">
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Plus className="w-5 h-5 text-rose-500" />
@@ -316,19 +317,15 @@ export default function AdminKelolaBerandaPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-zinc-300 mb-1">URL Gambar Banner *</label>
-              <input
-                type="url"
-                required
-                placeholder="https://images.unsplash.com/..."
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
+          {/* Upload / Image Input for Banner */}
+          <ImageUploadInput
+            label="Foto / Gambar Hero Banner"
+            value={newImageUrl}
+            onChange={setNewImageUrl}
+            required={true}
+          />
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div>
               <label className="block text-xs font-bold text-zinc-300 mb-1">Teks Tombol CTA</label>
               <input
@@ -336,6 +333,16 @@ export default function AdminKelolaBerandaPage() {
                 placeholder="Lihat Detail / Beli"
                 value={newButtonText}
                 onChange={(e) => setNewButtonText(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-zinc-300 mb-1">Link Tujuan Tombol</label>
+              <input
+                type="text"
+                placeholder="#galeri / https://shopee.co.id/..."
+                value={newButtonLink}
+                onChange={(e) => setNewButtonLink(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
@@ -494,16 +501,12 @@ export default function AdminKelolaBerandaPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-zinc-300 mb-1">URL Gambar Banner *</label>
-                  <input
-                    type="url"
-                    required
-                    value={editingBanner.imageUrl}
-                    onChange={(e) => setEditingBanner({ ...editingBanner, imageUrl: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  />
-                </div>
+                <ImageUploadInput
+                  label="Foto / Gambar Banner *"
+                  value={editingBanner.imageUrl}
+                  onChange={(url) => setEditingBanner({ ...editingBanner, imageUrl: url })}
+                  required={true}
+                />
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
