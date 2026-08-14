@@ -1,29 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MOCK_CATEGORIES, Work } from "@/data/mockData";
-import { getStoredWorks } from "@/utils/worksStore";
+import { MOCK_CATEGORIES, Work, Category } from "@/data/mockData";
 import { Sparkles, ShoppingCart, ExternalLink, Check, Share2, Eye, X } from "lucide-react";
 import ModalPortal from "./ModalPortal";
 
 export default function CategoryShowcase() {
   const [works, setWorks] = useState<Work[]>([]);
+  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [activeModalWork, setActiveModalWork] = useState<Work | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const loadWorks = () => {
-    setWorks(getStoredWorks());
-  };
-
   useEffect(() => {
-    loadWorks();
-    window.addEventListener("nomorecraft_works_updated", loadWorks);
-    window.addEventListener("storage", loadWorks);
-    return () => {
-      window.removeEventListener("nomorecraft_works_updated", loadWorks);
-      window.removeEventListener("storage", loadWorks);
-    };
+    fetch("/api/galeri")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          if (Array.isArray(json.data.works)) {
+            setWorks(json.data.works);
+          }
+          if (Array.isArray(json.data.categories) && json.data.categories.length > 0) {
+            setCategories(json.data.categories);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const filteredWorks = selectedCategory
@@ -70,7 +72,7 @@ export default function CategoryShowcase() {
             Semua Karya ({works.length})
           </button>
 
-          {MOCK_CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const count = works.filter((w) => w.categoryId === cat.id).length;
             const isSelected = selectedCategory === cat.id;
             return (
@@ -193,7 +195,7 @@ export default function CategoryShowcase() {
 
       </div>
 
-      {/* Modal Detail Karya (Fit Zero Scroll, Compact Layout) */}
+      {/* Modal Detail Karya */}
       {activeModalWork && (
         <ModalPortal>
           <div

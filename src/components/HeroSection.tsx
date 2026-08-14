@@ -2,32 +2,44 @@
 
 import React, { useState, useEffect } from "react";
 import { MOCK_SETTINGS, HeroBanner } from "@/data/mockData";
-import { getStoredBanners, getStoredHeroText, HeroTextSettings } from "@/utils/bannersStore";
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Heart, Award, ShieldCheck } from "lucide-react";
 
 export default function HeroSection() {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
-  const [heroText, setHeroText] = useState<HeroTextSettings>({
+  const [heroText, setHeroText] = useState({
     title: MOCK_SETTINGS.heroTitle,
     subtitle: MOCK_SETTINGS.heroSubtitle,
   });
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const loadData = () => {
-    setBanners(getStoredBanners());
-    setHeroText(getStoredHeroText());
-  };
-
   useEffect(() => {
-    loadData();
-    window.addEventListener("nomorecraft_banners_updated", loadData);
-    window.addEventListener("nomorecraft_hero_text_updated", loadData);
-    window.addEventListener("storage", loadData);
-    return () => {
-      window.removeEventListener("nomorecraft_banners_updated", loadData);
-      window.removeEventListener("nomorecraft_hero_text_updated", loadData);
-      window.removeEventListener("storage", loadData);
-    };
+    fetch("/api/cms/beranda")
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          if (resData.settings) {
+            setHeroText({
+              title: resData.settings.heroTitle || MOCK_SETTINGS.heroTitle,
+              subtitle: resData.settings.heroSubtitle || MOCK_SETTINGS.heroSubtitle,
+            });
+          }
+          if (Array.isArray(resData.banners) && resData.banners.length > 0) {
+            const mappedBanners: HeroBanner[] = resData.banners.map((b: any) => ({
+              id: b.id,
+              title: b.title,
+              subtitle: b.subtitle,
+              imageUrl: b.imageUrl || b.image_url,
+              buttonText: b.buttonText || b.button_text || "Lihat Detail",
+              buttonLink: b.buttonLink || b.button_link || "#galeri",
+              isActive: Boolean(b.isActive ?? b.is_active ?? 1),
+              badgeText: b.badgeText || b.badge_text || "Promo ✨",
+              tag: b.badgeText || b.badge_text || "Promo ✨",
+            }));
+            setBanners(mappedBanners);
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

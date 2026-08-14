@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { MOCK_CATEGORIES, Work } from "@/data/mockData";
-import { getStoredWorks, saveStoredWorks } from "@/utils/worksStore";
+import { MOCK_CATEGORIES, Work, Category } from "@/data/mockData";
 import {
   Plus,
   Trash2,
@@ -18,8 +17,10 @@ import {
 
 export default function AdminKelolaGaleriPage() {
   const [works, setWorks] = useState<Work[]>([]);
+  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
+  const [loading, setLoading] = useState(true);
 
   // Form state for Create / Edit
   const [editingWork, setEditingWork] = useState<Work | null>(null);
@@ -37,9 +38,28 @@ export default function AdminKelolaGaleriPage() {
 
   const [savedSuccess, setSavedSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    setWorks(getStoredWorks());
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/galeri");
+      const json = await res.json();
+      if (json.success && json.data) {
+        if (Array.isArray(json.data.works)) {
+          setWorks(json.data.works);
+        }
+        if (Array.isArray(json.data.categories) && json.data.categories.length > 0) {
+          setCategories(json.data.categories);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load gallery works from database:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const resetForm = () => {
     setTitle("");
@@ -73,16 +93,12 @@ export default function AdminKelolaGaleriPage() {
     e.preventDefault();
     if (!title || !imageUrl) return;
 
-    const cat = MOCK_CATEGORIES.find((c) => c.id === Number(categoryId));
-
-    let updatedList: Work[];
     if (editingWork) {
       // UPDATE existing work
-      const updatedWork: Work = {
-        ...editingWork,
+      const payload = {
+        id: editingWork.id,
         title,
         categoryId: Number(categoryId),
-        categoryName: cat?.name || "Nail Art",
         price,
         imageUrl,
         description,
@@ -93,25 +109,22 @@ export default function AdminKelolaGaleriPage() {
         isSold,
       };
 
-      updatedList = works.map((w) => (w.id === editingWork.id ? updatedWork : w));
-      setSavedSuccess("Detail karya berhasil diperbarui ke database!");
-
-      // Call database API
       try {
         await fetch("/api/cms/galeri", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedWork),
+          body: JSON.stringify(payload),
         });
+        setSavedSuccess("Detail karya berhasil diperbarui di Supabase database!");
+        resetForm();
+        await loadData();
       } catch (err) {
         console.error("Failed to update work in database:", err);
       }
     } else {
       // CREATE new work
-      const newWork: Work = {
-        id: Date.now(),
+      const payload = {
         categoryId: Number(categoryId),
-        categoryName: cat?.name || "Nail Art",
         title,
         description,
         imageUrl,
@@ -121,45 +134,37 @@ export default function AdminKelolaGaleriPage() {
         price,
         isSold,
         isFeatured,
-        createdAt: new Date().toISOString().split("T")[0],
       };
-      updatedList = [newWork, ...works];
-      setSavedSuccess("Karya baru berhasil disimpan ke database!");
 
-      // Call database API
       try {
         await fetch("/api/cms/galeri", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newWork),
+          body: JSON.stringify(payload),
         });
+        setSavedSuccess("Karya baru berhasil disimpan ke Supabase database!");
+        resetForm();
+        await loadData();
       } catch (err) {
         console.error("Failed to insert work into database:", err);
       }
     }
 
-    setWorks(updatedList);
-    saveStoredWorks(updatedList);
-    resetForm();
     setTimeout(() => setSavedSuccess(null), 3000);
   };
 
   const handleDeleteWork = async (id: number) => {
     if (confirm("Apakah Anda yakin ingin menghapus karya ini dari galeri?")) {
-      const updatedList = works.filter((w) => w.id !== id);
-      setWorks(updatedList);
-      saveStoredWorks(updatedList);
-
-      // Delete from database
       try {
         await fetch(`/api/cms/galeri?id=${id}`, {
           method: "DELETE",
         });
+        setSavedSuccess("Karya telah dihapus dari Supabase database.");
+        await loadData();
       } catch (err) {
         console.error("Failed to delete work from database:", err);
       }
 
-      setSavedSuccess("Karya telah dihapus dari database.");
       setTimeout(() => setSavedSuccess(null), 3000);
     }
   };
@@ -183,7 +188,7 @@ export default function AdminKelolaGaleriPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Galeri Karya</h1>
             <p className="text-sm text-zinc-400">
-              Tambah, edit detail/harga, dan hapus karya yang tampil di katalog galeri showcase.
+              Tambah, edit detail/harga, dan hapus karya yang tersimpan di database Supabase.
             </p>
           </div>
 
@@ -251,7 +256,7 @@ export default function AdminKelolaGaleriPage() {
                 onChange={(e) => setCategoryId(Number(e.target.value))}
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               >
-                {MOCK_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -360,7 +365,7 @@ export default function AdminKelolaGaleriPage() {
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
             >
               {editingWork ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              <span>{editingWork ? "Simpan ke Database" : "Tambah Karya Ke Database"}</span>
+              <span>{editingWork ? "Simpan ke Database Supabase" : "Tambah Karya Ke Database Supabase"}</span>
             </button>
           </div>
         </form>
@@ -396,7 +401,7 @@ export default function AdminKelolaGaleriPage() {
                 className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
               >
                 <option value="all">Semua Kategori</option>
-                {MOCK_CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -405,68 +410,72 @@ export default function AdminKelolaGaleriPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorks.map((w) => (
-              <div
-                key={w.id}
-                className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between hover:border-zinc-700 transition-all"
-              >
-                <div>
-                  <div className="aspect-[4/3] bg-zinc-950 relative">
-                    <img
-                      src={w.imageUrl}
-                      alt={w.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow">
-                        {w.categoryName}
+          {loading ? (
+            <p className="text-sm text-zinc-400">Memuat karya dari Supabase...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredWorks.map((w) => (
+                <div
+                  key={w.id}
+                  className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between hover:border-zinc-700 transition-all"
+                >
+                  <div>
+                    <div className="aspect-[4/3] bg-zinc-950 relative">
+                      <img
+                        src={w.imageUrl}
+                        alt={w.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow">
+                          {w.categoryName}
+                        </span>
+                        {w.isSold && (
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-950/80 text-amber-400 border border-amber-400/30">
+                            Sold Out
+                          </span>
+                        )}
+                        {w.isFeatured && (
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-zinc-950">
+                            Featured ⭐
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-1">
+                      <h3 className="text-base font-bold text-white">{w.title}</h3>
+                      <p className="text-xs text-zinc-400 line-clamp-2">{w.description}</p>
+                      <span className="text-sm font-extrabold text-rose-400 block pt-1">
+                        {w.price}
                       </span>
-                      {w.isSold && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-950/80 text-amber-400 border border-amber-400/30">
-                          Sold Out
-                        </span>
-                      )}
-                      {w.isFeatured && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-zinc-950">
-                          Featured ⭐
-                        </span>
-                      )}
                     </div>
                   </div>
-                  <div className="p-5 space-y-1">
-                    <h3 className="text-base font-bold text-white">{w.title}</h3>
-                    <p className="text-xs text-zinc-400 line-clamp-2">{w.description}</p>
-                    <span className="text-sm font-extrabold text-rose-400 block pt-1">
-                      {w.price}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="p-4 border-t border-zinc-800/80 flex items-center justify-between">
-                  <span className="text-[11px] text-zinc-500">
-                    ID: #{w.id}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditClick(w)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400 bg-amber-950/40 hover:bg-amber-900/60 transition-colors"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteWork(w.id)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Hapus</span>
-                    </button>
+                  <div className="p-4 border-t border-zinc-800/80 flex items-center justify-between">
+                    <span className="text-[11px] text-zinc-500">
+                      ID: #{w.id}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEditClick(w)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400 bg-amber-950/40 hover:bg-amber-900/60 transition-colors"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteWork(w.id)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Hapus</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -2,24 +2,29 @@
 
 import React, { useState, useEffect } from "react";
 import { MOCK_SETTINGS, SiteSettings } from "@/data/mockData";
-import { getStoredAboutSettings } from "@/utils/aboutStore";
 import { Heart, Sparkles, Target, Compass, MessageCircle } from "lucide-react";
 
 export default function AboutSection() {
   const [settings, setSettings] = useState<SiteSettings>(MOCK_SETTINGS);
 
-  const loadSettings = () => {
-    setSettings(getStoredAboutSettings());
-  };
-
   useEffect(() => {
-    loadSettings();
-    window.addEventListener("nomorecraft_about_updated", loadSettings);
-    window.addEventListener("storage", loadSettings);
-    return () => {
-      window.removeEventListener("nomorecraft_about_updated", loadSettings);
-      window.removeEventListener("storage", loadSettings);
-    };
+    fetch("/api/tentang")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setSettings({
+            siteName: json.data.siteName || MOCK_SETTINGS.siteName,
+            tagline: json.data.tagline || MOCK_SETTINGS.tagline,
+            heroTitle: json.data.heroTitle || MOCK_SETTINGS.heroTitle,
+            heroSubtitle: json.data.heroSubtitle || MOCK_SETTINGS.heroSubtitle,
+            heroImageUrl: json.data.heroImageUrl || MOCK_SETTINGS.heroImageUrl,
+            aboutText: json.data.aboutText || MOCK_SETTINGS.aboutText,
+            ownerName: json.data.ownerName || MOCK_SETTINGS.ownerName,
+            whatsappNumber: json.data.whatsappNumber || MOCK_SETTINGS.whatsappNumber,
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (

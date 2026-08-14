@@ -1,23 +1,55 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { MOCK_SHOP_LINKS } from "@/data/mockData";
-import { Save, ShoppingBag, Video, Check, Globe } from "lucide-react";
+import { MOCK_SHOP_LINKS, ShopLink } from "@/data/mockData";
+import { Save, ShoppingBag, Video, Check } from "lucide-react";
 
 export default function AdminKelolaTautanPage() {
-  const [links, setLinks] = useState(MOCK_SHOP_LINKS);
+  const [links, setLinks] = useState<ShopLink[]>(MOCK_SHOP_LINKS);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/beranda");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data?.shopLinks) && json.data.shopLinks.length > 0) {
+        setLinks(json.data.shopLinks);
+      }
+    } catch (err) {
+      console.error("Failed to load shop links from Supabase:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      for (const link of links) {
+        await fetch("/api/cms/tautan", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: link.id,
+            shopName: link.shopName,
+            url: link.url,
+          }),
+        });
+      }
+
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
-    }, 500);
+      await loadData();
+    } catch (err) {
+      console.error("Failed to save shop links to database:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -29,14 +61,14 @@ export default function AdminKelolaTautanPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Tautan Toko Marketplace</h1>
             <p className="text-sm text-zinc-400">
-              Kelola nama toko resmi dan link checkout Shopee & TikTok Shop.
+              Kelola nama toko resmi dan link checkout Shopee & TikTok Shop di Supabase database.
             </p>
           </div>
 
           {savedSuccess && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Perubahan Berhasil Disimpan!</span>
+              <span>Perubahan Berhasil Disimpan ke Supabase!</span>
             </div>
           )}
         </div>
@@ -95,7 +127,7 @@ export default function AdminKelolaTautanPage() {
               className="flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105 disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              <span>{saving ? "Menyimpan..." : "Simpan Perubahan Tautan Toko"}</span>
+              <span>{saving ? "Menyimpan..." : "Simpan Perubahan ke Supabase"}</span>
             </button>
           </div>
         </form>

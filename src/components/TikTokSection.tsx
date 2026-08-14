@@ -1,12 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MOCK_TIKTOK_VIDEOS, TikTokVideo } from "@/data/mockData";
 import { Play, ExternalLink, Video, Sparkles } from "lucide-react";
 
 export default function TikTokSection() {
-  const featuredVideo = MOCK_TIKTOK_VIDEOS.find((v) => v.isFeatured) || MOCK_TIKTOK_VIDEOS[0];
-  const [activeVideo, setActiveVideo] = useState<TikTokVideo>(featuredVideo);
+  const [videos, setVideos] = useState<TikTokVideo[]>(MOCK_TIKTOK_VIDEOS);
+  const [activeVideo, setActiveVideo] = useState<TikTokVideo>(MOCK_TIKTOK_VIDEOS[0]);
+
+  useEffect(() => {
+    fetch("/api/tiktok")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setVideos(json.data);
+          const featured = json.data.find((v: TikTokVideo) => v.isFeatured) || json.data[0];
+          setActiveVideo(featured);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section id="tiktok" className="py-20 bg-gradient-to-b from-white via-pink-50/20 to-rose-50/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 relative">
@@ -98,7 +111,7 @@ export default function TikTokSection() {
             </h3>
 
             <div className="space-y-3">
-              {MOCK_TIKTOK_VIDEOS.map((vid) => {
+              {videos.map((vid) => {
                 const isActive = activeVideo.id === vid.id;
                 return (
                   <div

@@ -1,14 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
 import { HeroBanner } from "@/data/mockData";
-import {
-  getStoredBanners,
-  saveStoredBanners,
-  getStoredHeroText,
-  saveStoredHeroText,
-} from "@/utils/bannersStore";
 import {
   Save,
   Plus,
@@ -49,52 +43,63 @@ export default function AdminKelolaBerandaPage() {
 
   const [savedHero, setSavedHero] = useState(false);
   const [savedBanner, setSavedBanner] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/cms/beranda");
+      const resData = await res.json();
+      if (resData.success) {
+        if (resData.settings) {
+          setHeroTitle(resData.settings.heroTitle || "");
+          setHeroSubtitle(resData.settings.heroSubtitle || "");
+        }
+        if (Array.isArray(resData.banners)) {
+          const mappedBanners: HeroBanner[] = resData.banners.map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            subtitle: b.subtitle,
+            imageUrl: b.imageUrl || b.image_url,
+            buttonText: b.buttonText || b.button_text || "Lihat Detail",
+            buttonLink: b.buttonLink || b.button_link || "#galeri",
+            isActive: Boolean(b.isActive ?? b.is_active ?? 1),
+            badgeText: b.badgeText || b.badge_text || "Promo ✨",
+            tag: b.badgeText || b.badge_text || "Promo ✨",
+          }));
+          setBanners(mappedBanners);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load beranda CMS data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const textData = getStoredHeroText();
-    setHeroTitle(textData.title);
-    setHeroSubtitle(textData.subtitle);
-
-    setBanners(getStoredBanners());
-
-    // Sync from database API on mount if available
-    fetch("/api/cms/beranda")
-      .then((res) => res.json())
-      .then((resData) => {
-        if (resData.success) {
-          if (resData.settings) {
-            setHeroTitle(resData.settings.heroTitle || textData.title);
-            setHeroSubtitle(resData.settings.heroSubtitle || textData.subtitle);
-          }
-          if (Array.isArray(resData.banners) && resData.banners.length > 0) {
-            const mappedBanners: HeroBanner[] = resData.banners.map((b: any) => ({
-              id: b.id,
-              title: b.title,
-              subtitle: b.subtitle,
-              imageUrl: b.imageUrl || b.image_url,
-              buttonText: b.buttonText || b.button_text || "Lihat Detail",
-              buttonLink: b.buttonLink || b.button_link || "#galeri",
-              isActive: Boolean(b.isActive ?? b.is_active ?? 1),
-              badgeText: b.badgeText || b.badge_text || "Promo ✨",
-              tag: b.badgeText || b.badge_text || "Promo ✨",
-            }));
-            setBanners(mappedBanners);
-            saveStoredBanners(mappedBanners);
-          }
-        }
-      })
-      .catch(() => {});
-  }, []);
+    loadData();
+  }, [loadData]);
 
   const handleSaveHero = async (e: React.FormEvent) => {
     e.preventDefault();
-    saveStoredHeroText({
-      title: heroTitle,
-      subtitle: heroSubtitle,
-    });
-
-    setSavedHero(true);
-    setTimeout(() => setSavedHero(false), 3000);
+    try {
+      await fetch("/api/cms/beranda", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "UPDATE_SETTINGS",
+          data: {
+            heroTitle,
+            heroSubtitle,
+          },
+        }),
+      });
+      setSavedHero(true);
+      setTimeout(() => setSavedHero(false), 3000);
+      await loadData();
+    } catch (err) {
+      console.error("Failed to save hero text to database:", err);
+    }
   };
 
   const handleAddBanner = async (e: React.FormEvent) => {
@@ -102,9 +107,7 @@ export default function AdminKelolaBerandaPage() {
     if (!newTitle || !newImageUrl) return;
 
     const tagText = newTag.trim() || "Promo Spesial ✨";
-
-    const newBannerObj: HeroBanner = {
-      id: Date.now(),
+    const newBannerObj = {
       title: newTitle,
       subtitle: newSubtitle,
       imageUrl: newImageUrl,
@@ -115,30 +118,26 @@ export default function AdminKelolaBerandaPage() {
       tag: tagText,
     };
 
-    const updatedBanners = [newBannerObj, ...banners];
-    setBanners(updatedBanners);
-    saveStoredBanners(updatedBanners);
-
-    // Save to database
     try {
       await fetch("/api/cms/beranda", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newBannerObj),
       });
+
+      setNewTitle("");
+      setNewSubtitle("");
+      setNewTag("Baru ✨");
+      setNewImageUrl("");
+      setNewButtonText("Lihat Detail");
+      setNewButtonLink("#galeri");
+
+      setSavedBanner(true);
+      setTimeout(() => setSavedBanner(false), 3000);
+      await loadData();
     } catch (err) {
       console.error("Failed to insert banner into database:", err);
     }
-
-    setNewTitle("");
-    setNewSubtitle("");
-    setNewTag("Baru ✨");
-    setNewImageUrl("");
-    setNewButtonText("Lihat Detail");
-    setNewButtonLink("#galeri");
-
-    setSavedBanner(true);
-    setTimeout(() => setSavedBanner(false), 3000);
   };
 
   const handleOpenEdit = (banner: HeroBanner) => {
@@ -149,19 +148,6 @@ export default function AdminKelolaBerandaPage() {
     e.preventDefault();
     if (!editingBanner) return;
 
-    const updatedBanners = banners.map((b) =>
-      b.id === editingBanner.id
-        ? {
-            ...editingBanner,
-            badgeText: editingBanner.tag || editingBanner.badgeText,
-          }
-        : b
-    );
-
-    setBanners(updatedBanners);
-    saveStoredBanners(updatedBanners);
-
-    // Save to database
     try {
       await fetch("/api/cms/beranda", {
         method: "PUT",
@@ -171,26 +157,23 @@ export default function AdminKelolaBerandaPage() {
           data: editingBanner,
         }),
       });
+
+      setEditingBanner(null);
+      setSavedBanner(true);
+      setTimeout(() => setSavedBanner(false), 3000);
+      await loadData();
     } catch (err) {
       console.error("Failed to update banner in database:", err);
     }
-
-    setEditingBanner(null);
-    setSavedBanner(true);
-    setTimeout(() => setSavedBanner(false), 3000);
   };
 
   const handleDeleteBanner = async (id: number) => {
     if (confirm("Apakah Anda yakin ingin menghapus banner ini?")) {
-      const updated = banners.filter((b) => b.id !== id);
-      setBanners(updated);
-      saveStoredBanners(updated);
-
-      // Delete from database
       try {
         await fetch(`/api/cms/beranda?id=${id}`, {
           method: "DELETE",
         });
+        await loadData();
       } catch (err) {
         console.error("Failed to delete banner from database:", err);
       }
@@ -206,14 +189,14 @@ export default function AdminKelolaBerandaPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Content Beranda</h1>
             <p className="text-sm text-zinc-400">
-              Edit teks hero utama, kelola slider banner carousel, tambahkan tag khusus, dan perbarui banner yang sudah diposting.
+              Edit teks hero utama, kelola slider banner carousel, tambahkan tag khusus, dan perbarui banner yang tersimpan di Supabase.
             </p>
           </div>
 
           {(savedHero || savedBanner) && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Data Berhasil Disimpan ke Database & Local Storage!</span>
+              <span>Data Berhasil Disimpan ke Supabase Database!</span>
             </div>
           )}
         </div>
@@ -226,7 +209,7 @@ export default function AdminKelolaBerandaPage() {
               <span>Teks Hero Utama Beranda (Headline)</span>
             </h2>
             <span className="text-xs text-rose-400 font-semibold bg-rose-950/60 px-3 py-1 rounded-full border border-rose-800/40">
-              Tersimpan ke Database (SQLite / Supabase)
+              Database Supabase Live Sync
             </span>
           </div>
 
@@ -306,7 +289,6 @@ export default function AdminKelolaBerandaPage() {
               <span>Opsi Tag / Label Badge Banner *</span>
             </label>
 
-            {/* Tag Preset Quick Selection Chips */}
             <div className="flex flex-wrap gap-2 mb-2">
               {PRESET_TAGS.map((tag) => (
                 <button
@@ -374,55 +356,59 @@ export default function AdminKelolaBerandaPage() {
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-white flex items-center justify-between">
             <span>Daftar Banner Slider Aktif ({banners.length})</span>
-            <span className="text-xs font-normal text-zinc-400">Klik 'Edit Banner' untuk mengubah isi promo</span>
+            <span className="text-xs font-normal text-zinc-400">Klik &apos;Edit Banner&apos; untuk mengubah isi promo</span>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {banners.map((b) => (
-              <div key={b.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-md flex flex-col justify-between">
-                <div>
-                  <div className="aspect-[21/9] bg-zinc-950 relative overflow-hidden">
-                    <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-85" />
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md">
-                      <TagIcon className="w-3 h-3" />
-                      <span>{b.tag || b.badgeText || "Promo"}</span>
+          {loading ? (
+            <p className="text-sm text-zinc-400">Memuat data dari Supabase...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {banners.map((b) => (
+                <div key={b.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-md flex flex-col justify-between">
+                  <div>
+                    <div className="aspect-[21/9] bg-zinc-950 relative overflow-hidden">
+                      <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-85" />
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md">
+                        <TagIcon className="w-3 h-3" />
+                        <span>{b.tag || b.badgeText || "Promo"}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-6 space-y-2">
+                      <h3 className="text-base font-bold text-white">{b.title}</h3>
+                      <p className="text-xs text-zinc-400 line-clamp-2">{b.subtitle}</p>
+                      <div className="text-[11px] text-rose-400 flex items-center gap-1">
+                        <Link2 className="w-3 h-3" />
+                        <span>{b.buttonText || "Lihat Detail"} ({b.buttonLink || "#galeri"})</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-6 space-y-2">
-                    <h3 className="text-base font-bold text-white">{b.title}</h3>
-                    <p className="text-xs text-zinc-400 line-clamp-2">{b.subtitle}</p>
-                    <div className="text-[11px] text-rose-400 flex items-center gap-1">
-                      <Link2 className="w-3 h-3" />
-                      <span>{b.buttonText || "Lihat Detail"} ({b.buttonLink || "#galeri"})</span>
-                    </div>
+                  <div className="px-6 pb-6 pt-3 border-t border-zinc-800 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleOpenEdit(b)}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 transition-colors border border-zinc-700"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Edit Banner</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteBanner(b.id)}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Hapus</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="px-6 pb-6 pt-3 border-t border-zinc-800 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleOpenEdit(b)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 transition-colors border border-zinc-700"
-                  >
-                    <Edit3 className="w-3.5 h-3.5 text-rose-400" />
-                    <span>Edit Banner</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteBanner(b.id)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Hapus</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
-      {/* Modal Edit Banner yang Telah Diposting */}
+      {/* Modal Edit Banner */}
       {editingBanner && (
         <ModalPortal>
           <div
@@ -553,7 +539,7 @@ export default function AdminKelolaBerandaPage() {
                     className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105"
                   >
                     <Save className="w-4 h-4" />
-                    <span>Simpan Perubahan ke Database</span>
+                    <span>Simpan Perubahan ke Supabase</span>
                   </button>
                 </div>
               </form>

@@ -1,26 +1,72 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MOCK_SETTINGS, MOCK_SOCIAL_LINKS } from "@/data/mockData";
-import { Save, ArrowLeft, Check, Instagram, MessageCircle, Video, Globe } from "lucide-react";
+import { MOCK_SETTINGS, MOCK_SOCIAL_LINKS, SocialLink } from "@/data/mockData";
+import { Save, ArrowLeft, Check, Instagram, MessageCircle, Video } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminSosialMediaPage() {
-  const [links, setLinks] = useState(MOCK_SOCIAL_LINKS);
+  const [links, setLinks] = useState<SocialLink[]>(MOCK_SOCIAL_LINKS);
   const [waNumber, setWaNumber] = useState(MOCK_SETTINGS.whatsappNumber);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  const loadData = useCallback(async () => {
+    try {
+      const [resLinks, resSettings] = await Promise.all([
+        fetch("/api/sosial-media").then((r) => r.json()),
+        fetch("/api/tentang").then((r) => r.json()),
+      ]);
+
+      if (resLinks.success && Array.isArray(resLinks.data)) {
+        setLinks(resLinks.data);
+      }
+      if (resSettings.success && resSettings.data) {
+        setWaNumber(resSettings.data.whatsappNumber || MOCK_SETTINGS.whatsappNumber);
+      }
+    } catch (err) {
+      console.error("Failed to load social links from Supabase:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      // Save WhatsApp number to settings
+      await fetch("/api/tentang", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsappNumber: waNumber }),
+      });
+
+      // Save each social link
+      for (const link of links) {
+        await fetch("/api/cms/sosial-media", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: link.id,
+            username: link.username,
+            url: link.url,
+          }),
+        });
+      }
+
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
-    }, 600);
+      await loadData();
+    } catch (err) {
+      console.error("Failed to save social links to database:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -31,7 +77,7 @@ export default function AdminSosialMediaPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <Link
-              href="/admin/login"
+              href="/admin/dashboard"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-500 hover:underline mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -41,14 +87,14 @@ export default function AdminSosialMediaPage() {
               CMS Kelola Tautan Media Sosial
             </h1>
             <p className="text-sm text-zinc-500">
-              Kelola username dan link tautan WhatsApp, Instagram, dan TikTok resmi No More Craft.
+              Kelola username dan link tautan WhatsApp, Instagram, dan TikTok resmi No More Craft di Supabase database.
             </p>
           </div>
 
           {savedSuccess && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Tautan Berhasil Disimpan!</span>
+              <span>Tautan Berhasil Disimpan ke Supabase!</span>
             </div>
           )}
         </div>
@@ -137,7 +183,7 @@ export default function AdminSosialMediaPage() {
               className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105 disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              <span>{saving ? "Menyimpan..." : "Simpan Tautan Media Sosial"}</span>
+              <span>{saving ? "Menyimpan..." : "Simpan Tautan ke Supabase"}</span>
             </button>
           </div>
         </form>

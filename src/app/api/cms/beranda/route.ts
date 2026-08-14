@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
-import { db, initDatabase } from "@/db";
-import { settings, heroBanners } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  fetchSettings,
+  updateSettings,
+  fetchHeroBanners,
+  createHeroBanner,
+  updateHeroBanner,
+  deleteHeroBanner,
+} from "@/db/services";
 
 export async function GET() {
   try {
-    await initDatabase();
-    const heroSettings = await db.select().from(settings).where(eq(settings.id, 1));
-    const bannersList = await db.select().from(heroBanners);
+    const [heroSettings, bannersList] = await Promise.all([
+      fetchSettings(),
+      fetchHeroBanners(),
+    ]);
+
     return NextResponse.json({
       success: true,
-      settings: heroSettings[0] || null,
+      settings: heroSettings,
       banners: bannersList,
     });
   } catch (error: any) {
@@ -20,45 +27,31 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    await initDatabase();
     const body = await req.json();
     const { action, data } = body;
 
     if (action === "UPDATE_SETTINGS") {
-      await db
-        .update(settings)
-        .set({
-          heroTitle: data.heroTitle || data.title,
-          heroSubtitle: data.heroSubtitle || data.subtitle,
-        })
-        .where(eq(settings.id, 1));
+      const ok = await updateSettings({
+        heroTitle: data.heroTitle || data.title,
+        heroSubtitle: data.heroSubtitle || data.subtitle,
+        siteName: data.siteName,
+        tagline: data.tagline,
+        aboutText: data.aboutText,
+        ownerName: data.ownerName,
+        whatsappNumber: data.whatsappNumber,
+      });
 
-      return NextResponse.json({ success: true, message: "Hero settings updated in database" });
+      return NextResponse.json({ success: ok, message: "Hero settings updated in database" });
     }
 
     if (action === "UPDATE_BANNER") {
-      await db
-        .update(heroBanners)
-        .set({
-          title: data.title,
-          subtitle: data.subtitle,
-          imageUrl: data.imageUrl,
-          buttonText: data.buttonText,
-          buttonLink: data.buttonLink,
-          badgeText: data.tag || data.badgeText,
-        })
-        .where(eq(heroBanners.id, data.id));
-
-      return NextResponse.json({ success: true, message: "Banner updated in database" });
+      const ok = await updateHeroBanner(data.id, data);
+      return NextResponse.json({ success: ok, message: "Banner updated in database" });
     }
 
     if (action === "TOGGLE_BANNER") {
-      await db
-        .update(heroBanners)
-        .set({ isActive: data.isActive })
-        .where(eq(heroBanners.id, data.id));
-
-      return NextResponse.json({ success: true, message: "Banner status updated" });
+      const ok = await updateHeroBanner(data.id, { isActive: data.isActive });
+      return NextResponse.json({ success: ok, message: "Banner status updated" });
     }
 
     return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
@@ -69,21 +62,9 @@ export async function PUT(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    await initDatabase();
     const body = await req.json();
-    const { id, title, subtitle, imageUrl, buttonText, buttonLink, badgeText, tag } = body;
-
-    const result = await db.insert(heroBanners).values({
-      title,
-      subtitle,
-      imageUrl,
-      buttonText: buttonText || "Lihat Detail",
-      buttonLink: buttonLink || "#galeri",
-      isActive: true,
-      badgeText: tag || badgeText || "Promo ✨",
-    });
-
-    return NextResponse.json({ success: true, data: result });
+    const ok = await createHeroBanner(body);
+    return NextResponse.json({ success: ok });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -91,7 +72,6 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await initDatabase();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -99,8 +79,8 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, error: "ID is required" }, { status: 400 });
     }
 
-    await db.delete(heroBanners).where(eq(heroBanners.id, parseInt(id, 10)));
-    return NextResponse.json({ success: true, message: "Banner deleted from database" });
+    const ok = await deleteHeroBanner(parseInt(id, 10));
+    return NextResponse.json({ success: ok, message: "Banner deleted from database" });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

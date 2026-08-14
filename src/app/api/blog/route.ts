@@ -1,39 +1,25 @@
 import { NextResponse } from "next/server";
-import { db, initDatabase } from "@/db";
-import { blogPosts, blogCategories } from "@/db/schema";
-import { eq, like, and } from "drizzle-orm";
+import { fetchBlogPosts } from "@/db/services";
 
 export async function GET(req: Request) {
   try {
-    await initDatabase();
     const { searchParams } = new URL(req.url);
     const blogCategoryId = searchParams.get("blogCategoryId");
     const search = searchParams.get("search");
 
-    let conditions = [];
+    let posts = await fetchBlogPosts();
 
     if (blogCategoryId) {
-      conditions.push(eq(blogPosts.blogCategoryId, parseInt(blogCategoryId, 10)));
+      posts = posts.filter((p) => p.blogCategoryId === parseInt(blogCategoryId, 10));
     }
-
     if (search) {
-      conditions.push(like(blogPosts.title, `%${search}%`));
+      posts = posts.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()));
     }
-
-    let posts;
-    if (conditions.length > 0) {
-      posts = await db.select().from(blogPosts).where(and(...conditions));
-    } else {
-      posts = await db.select().from(blogPosts);
-    }
-
-    const categoriesList = await db.select().from(blogCategories);
 
     return NextResponse.json({
       success: true,
       data: {
         posts,
-        categories: categoriesList,
       },
     });
   } catch (error: any) {

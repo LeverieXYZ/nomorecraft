@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_SETTINGS } from "@/data/mockData";
-import { getStoredAboutSettings, saveStoredAboutSettings } from "@/utils/aboutStore";
 import { Save, Check, ArrowLeft, Heart } from "lucide-react";
 import Link from "next/link";
 
@@ -20,38 +19,41 @@ export default function AdminTentangPage() {
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  useEffect(() => {
-    const stored = getStoredAboutSettings();
-    setFormData({
-      siteName: stored.siteName || MOCK_SETTINGS.siteName,
-      tagline: stored.tagline || MOCK_SETTINGS.tagline,
-      aboutText: stored.aboutText || MOCK_SETTINGS.aboutText,
-      ownerName: stored.ownerName || MOCK_SETTINGS.ownerName,
-      whatsappNumber: stored.whatsappNumber || MOCK_SETTINGS.whatsappNumber,
-    });
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tentang");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setFormData({
+          siteName: json.data.siteName || MOCK_SETTINGS.siteName,
+          tagline: json.data.tagline || MOCK_SETTINGS.tagline,
+          aboutText: json.data.aboutText || MOCK_SETTINGS.aboutText,
+          ownerName: json.data.ownerName || MOCK_SETTINGS.ownerName,
+          whatsappNumber: json.data.whatsappNumber || MOCK_SETTINGS.whatsappNumber,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load about data from Supabase:", err);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const fullSettings = {
-        ...MOCK_SETTINGS,
-        ...formData,
-      };
-      saveStoredAboutSettings(fullSettings);
-
-      await fetch("/api/cms/beranda", {
+      await fetch("/api/tentang", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "UPDATE_SETTINGS",
-          data: fullSettings,
-        }),
+        body: JSON.stringify(formData),
       });
 
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
+      await loadData();
     } catch (err) {
       console.error("Failed to save settings:", err);
     } finally {
@@ -77,14 +79,14 @@ export default function AdminTentangPage() {
               CMS Edit Halaman Tentang
             </h1>
             <p className="text-sm text-zinc-500">
-              Kelola teks profil brand, nama pemilik, dan nomor kontak WhatsApp.
+              Kelola teks profil brand, nama pemilik, dan nomor kontak WhatsApp di Supabase database.
             </p>
           </div>
 
           {savedSuccess && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Perubahan Berhasil Disimpan!</span>
+              <span>Perubahan Berhasil Disimpan ke Supabase!</span>
             </div>
           )}
         </div>
@@ -170,7 +172,7 @@ export default function AdminTentangPage() {
               className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md transition-transform hover:scale-105 disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              <span>{saving ? "Menyimpan..." : "Simpan Perubahan CMS"}</span>
+              <span>{saving ? "Menyimpan..." : "Simpan Perubahan ke Supabase"}</span>
             </button>
           </div>
         </form>

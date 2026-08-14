@@ -1,16 +1,39 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
 import { Sparkles, Layers, BookOpen, Video, ShoppingBag, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
+  const [counts, setCounts] = useState({
+    works: 0,
+    blog: 0,
+    tiktok: 0,
+    shop: 0,
+  });
+
+  useEffect(() => {
+    fetch("/api/beranda")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setCounts({
+            works: Array.isArray(json.data.works) ? json.data.works.length : 0,
+            blog: Array.isArray(json.data.blogPosts) ? json.data.blogPosts.length : 0,
+            tiktok: Array.isArray(json.data.tiktokVideos) ? json.data.tiktokVideos.length : 0,
+            shop: Array.isArray(json.data.shopProducts) ? json.data.shopProducts.length : 0,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const stats = [
-    { label: "Karya Showcase", count: "12", icon: <Layers className="w-5 h-5 text-rose-500" />, href: "/galeri" },
-    { label: "Artikel Blog", count: "4", icon: <BookOpen className="w-5 h-5 text-purple-500" />, href: "/blog" },
-    { label: "Video TikTok", count: "3", icon: <Video className="w-5 h-5 text-pink-500" />, href: "/#tiktok" },
-    { label: "Produk Ready", count: "6", icon: <ShoppingBag className="w-5 h-5 text-orange-500" />, href: "/belanja" },
+    { label: "Karya Showcase", count: counts.works.toString(), icon: <Layers className="w-5 h-5 text-rose-500" />, href: "/galeri" },
+    { label: "Artikel Blog", count: counts.blog.toString(), icon: <BookOpen className="w-5 h-5 text-purple-500" />, href: "/blog" },
+    { label: "Video TikTok", count: counts.tiktok.toString(), icon: <Video className="w-5 h-5 text-pink-500" />, href: "/#tiktok" },
+    { label: "Produk Ready", count: counts.shop.toString(), icon: <ShoppingBag className="w-5 h-5 text-orange-500" />, href: "/belanja" },
   ];
 
   return (
@@ -21,11 +44,11 @@ export default function AdminDashboardPage() {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-950 text-rose-300 text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Control Panel CMS</span>
+            <span>Control Panel CMS (Supabase Live)</span>
           </div>
           <h1 className="text-3xl font-extrabold text-white">Selamat Datang di Panel Admin</h1>
           <p className="text-sm text-zinc-400">
-            Kelola seluruh konten website No More Craft secara dinamis dan fleksibel.
+            Kelola seluruh konten website No More Craft yang terhubung langsung dengan Supabase PostgreSQL database.
           </p>
         </div>
 

@@ -1,43 +1,76 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import { MOCK_TIKTOK_VIDEOS, TikTokVideo } from "@/data/mockData";
+import { TikTokVideo } from "@/data/mockData";
 import { Plus, Trash2, Video, Check, Star } from "lucide-react";
 
 export default function AdminKelolaTikTokPage() {
-  const [videos, setVideos] = useState<TikTokVideo[]>(MOCK_TIKTOK_VIDEOS);
+  const [videos, setVideos] = useState<TikTokVideo[]>([]);
   const [title, setTitle] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddVideo = (e: React.FormEvent) => {
+  const loadData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tiktok");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setVideos(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load TikTok videos from Supabase:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleAddVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !videoUrl) return;
 
-    const newVideo: TikTokVideo = {
-      id: Date.now(),
-      title,
-      videoUrl,
-      embedUrl: videoUrl,
-      thumbnailUrl: thumbnailUrl || "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=800",
-      isFeatured,
-      sortOrder: 0,
-    };
+    try {
+      await fetch("/api/cms/tiktok", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          videoUrl,
+          thumbnailUrl,
+          isFeatured,
+        }),
+      });
 
-    setVideos([newVideo, ...videos]);
-    setTitle("");
-    setVideoUrl("");
-    setThumbnailUrl("");
-    setIsFeatured(false);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+      setTitle("");
+      setVideoUrl("");
+      setThumbnailUrl("");
+      setIsFeatured(false);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+      await loadData();
+    } catch (err) {
+      console.error("Failed to insert TikTok video into database:", err);
+    }
   };
 
-  const handleDeleteVideo = (id: number) => {
-    setVideos(videos.filter((v) => v.id !== id));
+  const handleDeleteVideo = async (id: number) => {
+    if (confirm("Apakah Anda yakin ingin menghapus video TikTok ini?")) {
+      try {
+        await fetch(`/api/cms/tiktok?id=${id}`, {
+          method: "DELETE",
+        });
+        await loadData();
+      } catch (err) {
+        console.error("Failed to delete TikTok video from database:", err);
+      }
+    }
   };
 
   return (
@@ -49,14 +82,14 @@ export default function AdminKelolaTikTokPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Video TikTok</h1>
             <p className="text-sm text-zinc-400">
-              Tambah link video TikTok baru dan tandai video sebagai Video Unggulan.
+              Tambah link video TikTok baru dan tandai video sebagai Video Unggulan di Supabase database.
             </p>
           </div>
 
           {savedSuccess && (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-xs shadow-lg animate-bounce">
               <Check className="w-4 h-4" />
-              <span>Video TikTok Ditambahkan!</span>
+              <span>Video TikTok Ditambahkan ke Supabase!</span>
             </div>
           )}
         </div>
@@ -127,7 +160,7 @@ export default function AdminKelolaTikTokPage() {
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-pink-600 hover:bg-pink-700 shadow-md transition-transform hover:scale-105"
             >
               <Plus className="w-4 h-4" />
-              <span>Simpan Video</span>
+              <span>Simpan Video ke Supabase</span>
             </button>
           </div>
         </form>
@@ -139,35 +172,39 @@ export default function AdminKelolaTikTokPage() {
             <span>Video TikTok Di Feed ({videos.length})</span>
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((v) => (
-              <div key={v.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="aspect-[16/10] bg-zinc-950 relative">
-                    <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
-                    {v.isFeatured && (
-                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-950">
-                        Unggulan ✨
-                      </span>
-                    )}
+          {loading ? (
+            <p className="text-sm text-zinc-400">Memuat video dari Supabase...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videos.map((v) => (
+                <div key={v.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="aspect-[16/10] bg-zinc-950 relative">
+                      <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
+                      {v.isFeatured && (
+                        <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-950">
+                          Unggulan ✨
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-5 space-y-1">
+                      <h3 className="text-sm font-bold text-white line-clamp-2">{v.title}</h3>
+                    </div>
                   </div>
-                  <div className="p-5 space-y-1">
-                    <h3 className="text-sm font-bold text-white line-clamp-2">{v.title}</h3>
-                  </div>
-                </div>
 
-                <div className="p-4 border-t border-zinc-800 flex justify-end">
-                  <button
-                    onClick={() => handleDeleteVideo(v.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Hapus</span>
-                  </button>
+                  <div className="p-4 border-t border-zinc-800 flex justify-end">
+                    <button
+                      onClick={() => handleDeleteVideo(v.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 bg-rose-950/40 hover:bg-rose-900/60 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

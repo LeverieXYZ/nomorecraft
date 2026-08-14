@@ -1,13 +1,30 @@
 import { NextResponse } from "next/server";
-import { initDatabase } from "@/db";
+import { getSupabase } from "@/db";
 
 export async function POST(req: Request) {
   try {
-    await initDatabase();
     const body = await req.json();
     const { email, password } = body;
 
-    if (email === "admin@nomorecraft.com" && password === "admin123") {
+    const supabase = getSupabase();
+    if (supabase) {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (!error && user && user.password_hash === password) {
+        return NextResponse.json({
+          success: true,
+          user: { id: user.id, email: user.email, name: user.name },
+          token: "jwt-token-nomorecraft-admin-supabase",
+        });
+      }
+    }
+
+    // Default Fallback Admin Check
+    if ((email === "admin@nomorecraft.com" || email === "admin") && password === "admin123") {
       return NextResponse.json({
         success: true,
         user: { id: 1, email: "admin@nomorecraft.com", name: "Admin No More Craft" },

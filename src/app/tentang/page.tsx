@@ -5,24 +5,29 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AboutSection from "@/components/AboutSection";
 import { MOCK_SETTINGS, SiteSettings } from "@/data/mockData";
-import { getStoredAboutSettings } from "@/utils/aboutStore";
 import { Heart, Sparkles, ShieldCheck, Award, MessageCircle, ArrowRight } from "lucide-react";
 
 export default function TentangPage() {
   const [settings, setSettings] = useState<SiteSettings>(MOCK_SETTINGS);
 
-  const loadSettings = () => {
-    setSettings(getStoredAboutSettings());
-  };
-
   useEffect(() => {
-    loadSettings();
-    window.addEventListener("nomorecraft_about_updated", loadSettings);
-    window.addEventListener("storage", loadSettings);
-    return () => {
-      window.removeEventListener("nomorecraft_about_updated", loadSettings);
-      window.removeEventListener("storage", loadSettings);
-    };
+    fetch("/api/tentang")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setSettings({
+            siteName: json.data.siteName || MOCK_SETTINGS.siteName,
+            tagline: json.data.tagline || MOCK_SETTINGS.tagline,
+            heroTitle: json.data.heroTitle || MOCK_SETTINGS.heroTitle,
+            heroSubtitle: json.data.heroSubtitle || MOCK_SETTINGS.heroSubtitle,
+            heroImageUrl: json.data.heroImageUrl || MOCK_SETTINGS.heroImageUrl,
+            aboutText: json.data.aboutText || MOCK_SETTINGS.aboutText,
+            ownerName: json.data.ownerName || MOCK_SETTINGS.ownerName,
+            whatsappNumber: json.data.whatsappNumber || MOCK_SETTINGS.whatsappNumber,
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (

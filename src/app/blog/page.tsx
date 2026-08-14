@@ -1,17 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_BLOG_POSTS, MOCK_BLOG_CATEGORIES, BlogPost } from "@/data/mockData";
 import { BookOpen, Calendar, Clock, ArrowRight, Search, X } from "lucide-react";
 
 export default function BlogPage() {
+  const [posts, setPosts] = useState<BlogPost[]>(MOCK_BLOG_POSTS);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeArticle, setActiveArticle] = useState<BlogPost | null>(null);
 
-  const filteredPosts = MOCK_BLOG_POSTS.filter((post) => {
+  useEffect(() => {
+    fetch("/api/blog")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data?.posts) && json.data.posts.length > 0) {
+          setPosts(json.data.posts);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredPosts = posts.filter((post) => {
     const matchesCategory = selectedCategory ? post.blogCategoryId === selectedCategory : true;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
@@ -64,10 +76,10 @@ export default function BlogPage() {
                 : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-purple-50"
             }`}
           >
-            Semua Artikel ({MOCK_BLOG_POSTS.length})
+            Semua Artikel ({posts.length})
           </button>
           {MOCK_BLOG_CATEGORIES.map((cat) => {
-            const count = MOCK_BLOG_POSTS.filter((p) => p.blogCategoryId === cat.id).length;
+            const count = posts.filter((p) => p.blogCategoryId === cat.id).length;
             const isSelected = selectedCategory === cat.id;
             return (
               <button
