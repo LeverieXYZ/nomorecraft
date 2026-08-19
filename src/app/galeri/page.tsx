@@ -1,12 +1,48 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_CATEGORIES, Work, Category } from "@/data/mockData";
 import { Sparkles, Search, ShoppingBag, Video, Eye, Share2, Check, X, Filter, Images } from "lucide-react";
 import GalleryDetailModal from "@/components/GalleryDetailModal";
 import SafeImage from "@/components/SafeImage";
+
+function GalleryCardImage({ work }: { work: Work }) {
+  const images = useMemo(() => {
+    if (Array.isArray(work.images) && work.images.length > 0) return work.images.filter(Boolean);
+    return [work.imageUrl];
+  }, [work]);
+
+  const [index, setIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (!isHovered || images.length <= 1) {
+      setIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isHovered, images.length]);
+
+  return (
+    <div
+      className="w-full h-full relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <SafeImage
+        key={index}
+        src={images[index]}
+        alt={work.title}
+        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500 animate-fade-in"
+      />
+    </div>
+  );
+}
 
 export default function GaleriPage() {
   const [works, setWorks] = useState<Work[]>([]);
@@ -64,7 +100,7 @@ export default function GaleriPage() {
             Galeri Kreasi No More Craft
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Semua produk 100% handmade dibuat dengan teliti, menggunakan bahan berkualitas premium & bisa kustom model. Klik karya untuk melihat galeri foto lengkap (mode carousel).
+            Semua produk 100% handmade dibuat dengan teliti, menggunakan bahan berkualitas premium & bisa kustom model. Klik karya untuk melihat galeri foto lengkap (mode auto-carousel).
           </p>
 
           {/* Search Bar */}
@@ -154,11 +190,7 @@ export default function GaleriPage() {
                 >
                   <div>
                     <div className="relative aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800">
-                      <SafeImage
-                        src={work.imageUrl}
-                        alt={work.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
+                      <GalleryCardImage work={work} />
                       <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 pointer-events-none">
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/90 dark:bg-zinc-900/90 text-rose-600 dark:text-rose-400 backdrop-blur-md">
                           {work.categoryName}
@@ -205,10 +237,10 @@ export default function GaleriPage() {
                             setActiveModalWork(work);
                           }}
                           className="p-3.5 rounded-full bg-white text-zinc-900 shadow-xl hover:scale-115 transition-transform cursor-pointer flex items-center gap-1.5 font-bold text-xs"
-                          title="Lihat Detail & Galeri Foto"
+                          title="Lihat Detail & Auto-Carousel"
                         >
                           <Eye className="w-5 h-5 text-rose-600" />
-                          <span>Lihat Galeri Foto</span>
+                          <span>Buka Auto-Carousel</span>
                         </button>
                       </div>
                     </div>
@@ -273,7 +305,7 @@ export default function GaleriPage() {
         )}
       </section>
 
-      {/* Mode Carousel Modal Detail Preview */}
+      {/* Mode Auto-Carousel Modal Detail Preview */}
       <GalleryDetailModal
         work={activeModalWork}
         onClose={() => setActiveModalWork(null)}

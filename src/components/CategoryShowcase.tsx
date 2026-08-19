@@ -1,10 +1,46 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { MOCK_CATEGORIES, Work, Category } from "@/data/mockData";
 import { Sparkles, ShoppingBag, Video, Check, Share2, Eye, Images } from "lucide-react";
 import GalleryDetailModal from "./GalleryDetailModal";
 import SafeImage from "./SafeImage";
+
+function GalleryCardImage({ work }: { work: Work }) {
+  const images = useMemo(() => {
+    if (Array.isArray(work.images) && work.images.length > 0) return work.images.filter(Boolean);
+    return [work.imageUrl];
+  }, [work]);
+
+  const [index, setIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (!isHovered || images.length <= 1) {
+      setIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isHovered, images.length]);
+
+  return (
+    <div
+      className="w-full h-full relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <SafeImage
+        key={index}
+        src={images[index]}
+        alt={work.title}
+        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500 animate-fade-in"
+      />
+    </div>
+  );
+}
 
 export default function CategoryShowcase() {
   const [works, setWorks] = useState<Work[]>([]);
@@ -56,7 +92,7 @@ export default function CategoryShowcase() {
             Koleksi Kerajinan Pilihan
           </h2>
           <p className="text-zinc-600 dark:text-zinc-400 text-base">
-            Setiap karya dirancang unik dengan detail presisi. Klik karya untuk melihat galeri foto lengkap & detail spesifikasinya.
+            Setiap karya dirancang unik dengan detail presisi. Klik karya untuk melihat galeri foto lengkap dengan mode auto-carousel.
           </p>
         </div>
 
@@ -106,13 +142,9 @@ export default function CategoryShowcase() {
                 onClick={() => setActiveModalWork(work)}
                 className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden border border-rose-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col"
               >
-                {/* Image Container */}
+                {/* Image Container with Auto Hover Preview */}
                 <div className="relative aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800">
-                  <SafeImage
-                    src={work.imageUrl}
-                    alt={work.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  <GalleryCardImage work={work} />
 
                   {/* Category & Featured Badges Overlay */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 pointer-events-none">
@@ -126,7 +158,7 @@ export default function CategoryShowcase() {
                     )}
                   </div>
 
-                  {/* Stock Status Badge (Ready Stock / Pre-Order / Sold Out) */}
+                  {/* Stock Status Badge */}
                   <div className="absolute top-3 right-3 pointer-events-none">
                     {itemStatus === "Ready Stock" && (
                       <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-md backdrop-blur-md">
@@ -162,10 +194,10 @@ export default function CategoryShowcase() {
                         setActiveModalWork(work);
                       }}
                       className="p-3.5 rounded-full bg-white text-zinc-900 shadow-xl hover:scale-115 transition-transform cursor-pointer flex items-center gap-1.5 font-bold text-xs"
-                      title="Lihat Detail & Galeri Carousel"
+                      title="Lihat Detail & Auto-Carousel"
                     >
                       <Eye className="w-5 h-5 text-rose-600" />
-                      <span>Lihat Galeri Foto</span>
+                      <span>Buka Auto-Carousel</span>
                     </button>
                   </div>
                 </div>
@@ -238,7 +270,7 @@ export default function CategoryShowcase() {
 
       </div>
 
-      {/* Mode Carousel Modal Detail Preview */}
+      {/* Auto-Carousel Modal Detail Preview */}
       <GalleryDetailModal
         work={activeModalWork}
         onClose={() => setActiveModalWork(null)}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Work, MOCK_SETTINGS } from "@/data/mockData";
 import {
   X,
@@ -14,6 +14,8 @@ import {
   Clock,
   Ban,
   Images,
+  Play,
+  Pause,
 } from "lucide-react";
 import ModalPortal from "./ModalPortal";
 import SafeImage from "./SafeImage";
@@ -21,11 +23,19 @@ import SafeImage from "./SafeImage";
 interface GalleryDetailModalProps {
   work: Work | null;
   onClose: () => void;
+  autoPlayInterval?: number; // default 3500ms
 }
 
-export default function GalleryDetailModal({ work, onClose }: GalleryDetailModalProps) {
+export default function GalleryDetailModal({
+  work,
+  onClose,
+  autoPlayInterval = 3500,
+}: GalleryDetailModalProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Compute resolved image list
   const images = useMemo(() => {
@@ -50,9 +60,12 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
       : ["https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80"];
   }, [work]);
 
+  const hasMultipleImages = images.length > 1;
+
   // Reset index when work changes
   useEffect(() => {
     setActiveImageIndex(0);
+    setIsPlaying(true);
   }, [work]);
 
   const nextImage = useCallback(() => {
@@ -64,6 +77,22 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
     if (images.length <= 1) return;
     setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
+
+  // Automatic Carousel Interval Loop
+  useEffect(() => {
+    if (!hasMultipleImages || !isPlaying || isHovered) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      nextImage();
+    }, autoPlayInterval);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [hasMultipleImages, isPlaying, isHovered, autoPlayInterval, nextImage]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -84,10 +113,12 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
 
   // Touch Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
+    setIsHovered(true);
     setTouchStartX(e.touches[0].clientX);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    setIsHovered(false);
     if (touchStartX === null) return;
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX - touchEndX;
@@ -104,7 +135,6 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
   const itemStatus = work.stockStatus || (work.isSold ? "Sold Out" : "Ready Stock");
   const shopeeLink = work.shopeeUrl || work.buyLink || "https://shopee.co.id/nomorecraft";
   const tiktokLink = work.tiktokShopUrl || "https://tiktok.com/@nomorecraft";
-  const hasMultipleImages = images.length > 1;
 
   return (
     <ModalPortal>
@@ -127,9 +157,12 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
           </button>
 
           <div className="grid grid-cols-1 sm:grid-cols-12 max-h-[90vh] overflow-y-auto">
-            {/* Left Column: Carousel Area */}
-            <div className="sm:col-span-6 bg-rose-50/40 dark:bg-zinc-950 flex flex-col justify-between p-4 relative select-none">
-              
+            {/* Left Column: Auto Carousel Area */}
+            <div
+              className="sm:col-span-6 bg-rose-50/40 dark:bg-zinc-950 flex flex-col justify-between p-4 relative select-none"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
               {/* Active Image Box */}
               <div
                 className="relative aspect-square sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-zinc-900 flex items-center justify-center shadow-inner group"
@@ -140,17 +173,42 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
                   key={activeImageIndex}
                   src={images[activeImageIndex]}
                   alt={`${work.title} - Foto ${activeImageIndex + 1}`}
-                  className="w-full h-full object-contain transition-all duration-300 animate-fade-in"
+                  className="w-full h-full object-contain transition-all duration-500 animate-fade-in"
                 />
 
-                {/* Counter Badge */}
+                {/* Counter & Auto-Play Badge */}
                 {hasMultipleImages && (
-                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/75 text-white backdrop-blur-md shadow-md pointer-events-none">
+                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/75 text-white backdrop-blur-md shadow-md">
                     <Images className="w-3.5 h-3.5 text-rose-400" />
                     <span>
                       {activeImageIndex + 1} / {images.length}
                     </span>
+                    {isPlaying && !isHovered && (
+                      <span className="flex h-1.5 w-1.5 relative ml-0.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
+                      </span>
+                    )}
                   </div>
+                )}
+
+                {/* Auto Play / Pause Toggle Button */}
+                {hasMultipleImages && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsPlaying((prev) => !prev);
+                    }}
+                    className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all text-[10px] flex items-center gap-1 shadow-md cursor-pointer"
+                    title={isPlaying ? "Jeda Auto-Play" : "Mulai Auto-Play"}
+                  >
+                    {isPlaying ? (
+                      <Pause className="w-3 h-3 text-amber-300" />
+                    ) : (
+                      <Play className="w-3 h-3 text-emerald-400 fill-emerald-400" />
+                    )}
+                  </button>
                 )}
 
                 {/* Left/Right Arrows */}
@@ -187,7 +245,7 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
                 )}
               </div>
 
-              {/* Dot Indicators for Mobile & Desktop */}
+              {/* Dot Indicators */}
               {hasMultipleImages && (
                 <div className="flex items-center justify-center gap-1.5 pt-3">
                   {images.map((_, idx) => (
@@ -274,7 +332,7 @@ export default function GalleryDetailModal({ work, onClose }: GalleryDetailModal
                   {work.title}
                 </h3>
 
-                {/* Clean Description (No raw tags) */}
+                {/* Clean Description */}
                 <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed max-h-32 overflow-y-auto">
                   {work.description.replace(/<!--IMAGES:[\s\S]*?-->/g, "").trim()}
                 </p>
