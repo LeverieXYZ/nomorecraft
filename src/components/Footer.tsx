@@ -6,6 +6,7 @@ import { Sparkles, MessageCircle, Instagram, Video, ShoppingBag, Heart, ArrowUpR
 import { MOCK_SETTINGS } from "@/data/mockData";
 
 import AestheticLogo from "./AestheticLogo";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Footer() {
   const waPrefilledUrl = `https://wa.me/${MOCK_SETTINGS.whatsappNumber}?text=${encodeURIComponent(
@@ -130,13 +131,21 @@ export default function Footer() {
 
         </div>
 
-        {/* Bottom copyright */}
+        {/* Bottom copyright & Theme Switcher */}
         <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
           <p>© {new Date().getFullYear()} No More Craft. All rights reserved.</p>
-          <div className="flex items-center gap-1">
-            <span>Dibuat dengan</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>untuk pecinta crafting & kuku cantik</span>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-400">Tema:</span>
+              <ThemeToggle showLabel={true} />
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span>Dibuat dengan</span>
+              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+              <span>untuk pecinta crafting & kuku cantik</span>
+            </div>
           </div>
         </div>
 

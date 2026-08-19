@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Menu, X, Lock, Instagram, MessageCircle, Video } from "lucide-react";
 import AestheticLogo from "./AestheticLogo";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-40 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-rose-100/60 dark:border-zinc-800 shadow-xs transition-all duration-300">
+    <header className="sticky top-0 left-0 right-0 z-40 w-full bg-white/85 dark:bg-zinc-950/85 backdrop-blur-md border-b border-rose-100/60 dark:border-zinc-800 shadow-xs transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -58,10 +59,14 @@ export default function Navbar() {
             </Link>
           </nav>
 
-          {/* Right Header Actions & Social Media Icons */}
-          <div className="hidden lg:flex items-center gap-4">
+          {/* Right Header Actions, Theme Switcher & Social Media Icons */}
+          <div className="hidden lg:flex items-center gap-3">
+            
+            {/* Theme Toggle Button (Dark / Light) */}
+            <ThemeToggle />
+
             {/* Social Media Quick Icons */}
-            <div className="flex items-center gap-2 pr-3 border-r border-rose-100 dark:border-zinc-800">
+            <div className="flex items-center gap-1.5 px-2 border-l border-r border-rose-100 dark:border-zinc-800">
               <a
                 href="https://wa.me/6281234567890"
                 target="_blank"
@@ -94,10 +99,10 @@ export default function Navbar() {
             {/* Admin CMS Login */}
             <Link
               href="/admin/login"
-              className="p-2.5 rounded-full text-zinc-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-800 transition-colors"
+              className="p-2 rounded-full text-zinc-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-800 transition-colors"
               title="CMS Admin Dashboard"
             >
-              <Lock className="w-4.5 h-4.5" />
+              <Lock className="w-4 h-4" />
             </Link>
 
             {/* Shopee CTA Button */}
@@ -112,13 +117,16 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile Actions: Theme Toggle + Menu Button */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <ThemeToggle />
+
             <Link
               href="/admin/login"
               className="p-2 rounded-full text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              title="CMS Admin"
             >
-              <Lock className="w-5 h-5" />
+              <Lock className="w-4.5 h-4.5" />
             </Link>
 
             <button
@@ -136,7 +144,7 @@ export default function Navbar() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-rose-100 dark:border-zinc-800 px-4 pt-3 pb-6 space-y-4 animate-fade-in">
-          <nav className="flex flex-col space-y-3">
+          <nav className="flex flex-col space-y-2">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
@@ -181,7 +189,13 @@ export default function Navbar() {
             </Link>
           </nav>
 
-          <div className="pt-2 border-t border-rose-100 dark:border-zinc-800 space-y-3">
+          <div className="pt-3 border-t border-rose-100 dark:border-zinc-800 space-y-3">
+            {/* Theme Toggle row in Mobile Drawer */}
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-rose-50/60 dark:bg-zinc-900 border border-rose-100 dark:border-zinc-800">
+              <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Tampilan Mode</span>
+              <ThemeToggle showLabel={true} />
+            </div>
+
             <div className="flex items-center justify-center gap-4">
               <a
                 href="https://wa.me/6281234567890"

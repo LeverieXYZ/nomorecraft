@@ -56,7 +56,7 @@ export default function CraftActivityGallery() {
         <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white">
           Galeri Foto Kegiatan & Proses Pengerjaan
         </h2>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Suasana pembuatan pesanan sehari-hari di studio No More Craft.
         </p>
       </div>
@@ -88,7 +88,7 @@ export default function CraftActivityGallery() {
               <h4 className="text-sm font-bold text-zinc-900 dark:text-white group-hover:text-rose-600 transition-colors">
                 {photo.title}
               </h4>
-              <p className="text-xs text-zinc-500 line-clamp-2">{photo.caption}</p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{photo.caption}</p>
             </div>
           </div>
         ))}

@@ -95,7 +95,7 @@ export default async function SingleBlogPage({ params }: { params: Promise<{ slu
                   <h4 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-purple-600 transition-colors line-clamp-2">
                     {rel.title}
                   </h4>
-                  <p className="text-xs text-zinc-500 line-clamp-2">{rel.excerpt}</p>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{rel.excerpt}</p>
                 </Link>
               ))}
             </div>

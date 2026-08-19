@@ -44,7 +44,7 @@ export default function TentangPage() {
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
             Mengenal Lebih Dekat {settings.siteName}
           </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-zinc-600 dark:text-zinc-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
             Setiap detail dibuat buatan tangan (100% handmade) dengan cinta, kecermatan, dan material berkualitas tinggi.
           </p>
         </div>
@@ -60,38 +60,38 @@ export default function TentangPage() {
             <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white">
               Mengapa Memilih {settings.siteName}?
             </h2>
-            <p className="text-sm text-zinc-500 mt-2">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
               Prinsip yang selalu kami jaga dalam setiap pesanan dan kerajinan tangan.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-rose-100 dark:border-zinc-800 shadow-sm space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                 <Sparkles className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Desain Kustom Eksklusif</h3>
-              <p className="text-sm text-zinc-500 leading-relaxed">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 Bisa request warna, tema, ukuran kuku, hingga variasi bunga sesuai selera impianmu.
               </p>
             </div>
 
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-rose-100 dark:border-zinc-800 shadow-sm space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-pink-100 dark:bg-pink-950 text-pink-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-pink-100 dark:bg-pink-950 text-pink-600 dark:text-pink-400 flex items-center justify-center">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Bahan Premium & Awet</h3>
-              <p className="text-sm text-zinc-500 leading-relaxed">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 Memakai gel kuku profesional dan pipe cleaner tebal yang warna serta bentuknya bertahan lama.
               </p>
             </div>
 
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-rose-100 dark:border-zinc-800 shadow-sm space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <Award className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Garansi Kemasan Aman</h3>
-              <p className="text-sm text-zinc-500 leading-relaxed">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 Setiap buket dan paket Press-on Nails dikemas rapi dengan kotak kokoh dan bubble wrap tebal.
               </p>
             </div>
@@ -104,7 +104,7 @@ export default function TentangPage() {
         <h2 className="text-3xl font-extrabold text-zinc-900 dark:text-white">
           Ingin Berkonsultasi atau Pesan Custom?
         </h2>
-        <p className="text-zinc-600 dark:text-zinc-400 text-base max-w-xl mx-auto">
+        <p className="text-zinc-600 dark:text-zinc-300 text-base max-w-xl mx-auto">
           Hubungi {settings.ownerName} langsung melalui WhatsApp untuk diskusi warna, harga paket, atau jadwal pengerjaan.
         </p>
         <div>

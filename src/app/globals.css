@@ -2,7 +2,11 @@
 
 :root {
   --background: transparent;
-  --foreground: #1e1b1e;
+  --foreground: #18181b;
+}
+
+.dark {
+  --foreground: #f4f4f5;
 }
 
 html, body {
@@ -18,31 +22,75 @@ body {
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Translucent Section Backdrops - High background visibility */
+/* Dark mode backdrop overlay on body */
+html.dark body {
+  background-color: #09090b !important;
+}
+
+/* Translucent Section Backdrops */
 main {
   background: transparent !important;
 }
 
+/* Light Mode Section Glass */
 section {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-  backdrop-filter: blur(5px) !important;
-  -webkit-backdrop-filter: blur(5px) !important;
+  background-color: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-/* Cards & containers glass effect - High transparency */
+/* Dark Mode Section Glass */
+html.dark section {
+  background-color: rgba(12, 12, 16, 0.82) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Light Mode Card Glass */
 .bg-white {
-  background-color: rgba(255, 255, 255, 0.65) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  box-shadow: 0 4px 20px rgba(244, 114, 182, 0.08);
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Dark Mode Card Overrides */
+html.dark .bg-white,
+html.dark .bg-zinc-900,
+html.dark .dark\:bg-zinc-900 {
+  background-color: rgba(24, 24, 27, 0.9) !important;
+  border-color: rgba(63, 63, 70, 0.6) !important;
 }
 
 /* Glassmorphism utilities */
 .glass-card {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+html.dark .glass-card {
+  background: rgba(24, 24, 27, 0.88) !important;
+  border: 1px solid rgba(63, 63, 70, 0.6) !important;
+}
+
+/* Enhanced Dark Mode Text Contrast */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #ffffff;
+}
+
+html.dark p,
+html.dark span.text-zinc-600,
+html.dark span.text-zinc-500,
+html.dark p.text-zinc-600,
+html.dark p.text-zinc-500 {
+  color: #d4d4d8;
 }

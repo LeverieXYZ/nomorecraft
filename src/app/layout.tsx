@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "No More Craft — Handmade Craft, Nail Art, Pipe Cleaner & Crochet",
@@ -12,11 +13,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="scroll-smooth">
-      <body className="text-zinc-900 min-h-screen flex flex-col font-sans antialiased selection:bg-rose-200 selection:text-rose-900">
-        <div className="min-h-screen flex flex-col bg-white/10 backdrop-blur-[1px]">
-          {children}
-        </div>
+    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const saved = localStorage.getItem('nomorecraft_theme');
+                if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-rose-200 selection:text-rose-900 transition-colors duration-300">
+        <ThemeProvider>
+          <div className="min-h-screen flex flex-col bg-white/10 dark:bg-black/30 backdrop-blur-[1px]">
+            {children}
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
