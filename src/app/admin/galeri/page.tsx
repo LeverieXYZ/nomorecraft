@@ -125,16 +125,23 @@ export default function AdminKelolaGaleriPage() {
       };
 
       try {
-        await fetch("/api/cms/galeri", {
+        const res = await fetch("/api/cms/galeri", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          alert(`Gagal memperbarui karya: ${json.error || "Terjadi kesalahan di server."}`);
+          return;
+        }
         setSavedSuccess("Detail karya & foto galeri berhasil diperbarui di Supabase!");
         resetForm();
         await loadData();
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to update work in database:", err);
+        alert(`Error: ${err.message || "Gagal menghubungi server"}`);
+        return;
       }
     } else {
       // CREATE new work
@@ -154,16 +161,23 @@ export default function AdminKelolaGaleriPage() {
       };
 
       try {
-        await fetch("/api/cms/galeri", {
+        const res = await fetch("/api/cms/galeri", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        setSavedSuccess("Karya baru berhasil disimpan ke Supabase database!");
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          alert(`Gagal menyimpan karya: ${json.error || "Terjadi kesalahan di server."}`);
+          return;
+        }
+        setSavedSuccess("Karya baru & foto galeri berhasil disimpan ke Supabase database!");
         resetForm();
         await loadData();
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to insert work into database:", err);
+        alert(`Error: ${err.message || "Gagal menghubungi server"}`);
+        return;
       }
     }
 

@@ -459,6 +459,52 @@ export async function fetchCategories(): Promise<Category[]> {
   return MOCK_CATEGORIES;
 }
 
+// Helper to encode multiple images safely into description as a universal fallback
+function encodeDescriptionWithImages(desc: string, images?: string[]): string {
+  const cleanDesc = (desc || "").replace(/<!--IMAGES:[\s\S]*?-->/g, "").trim();
+  if (images && images.length > 0) {
+    return `${cleanDesc}\n<!--IMAGES:${JSON.stringify(images)}-->`;
+  }
+  return cleanDesc;
+}
+
+// Helper to extract images and clean description
+function extractImagesAndDescription(rawDesc: string, rawImages: any, rawImageUrl: string): { description: string; images: string[] } {
+  let images: string[] = [];
+  let description = rawDesc || "";
+
+  // 1. Try column images first
+  if (Array.isArray(rawImages)) {
+    images = rawImages.filter(Boolean);
+  } else if (typeof rawImages === "string" && rawImages.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(rawImages);
+      if (Array.isArray(parsed)) images = parsed.filter(Boolean);
+    } catch {}
+  }
+
+  // 2. If no images column, check description marker
+  if (images.length === 0 && description.includes("<!--IMAGES:")) {
+    const match = description.match(/<!--IMAGES:([\s\S]*?)-->/);
+    if (match && match[1]) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        if (Array.isArray(parsed)) images = parsed.filter(Boolean);
+      } catch {}
+    }
+  }
+
+  // Clean description of any internal markers
+  description = description.replace(/<!--IMAGES:[\s\S]*?-->/g, "").trim();
+
+  const primaryImage = rawImageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
+  if (images.length === 0) {
+    images = [primaryImage];
+  }
+
+  return { description, images };
+}
+
 export async function fetchWorks(categoryId?: number, search?: string): Promise<Work[]> {
   const categories = await fetchCategories();
   const catMap = new Map<number, string>(categories.map((c) => [c.id, c.name]));
@@ -477,31 +523,16 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
       return data.map((w: any) => {
         const isSoldBool = Boolean(w.is_sold);
         const resolvedStatus = (w.stock_status || (isSoldBool ? "Sold Out" : "Ready Stock")) as "Ready Stock" | "Pre-Order" | "Sold Out";
-        const primaryImage = w.image_url || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
-        
-        let resolvedImages: string[] = [];
-        if (Array.isArray(w.images)) {
-          resolvedImages = w.images.filter(Boolean);
-        } else if (typeof w.images === "string" && w.images.trim().startsWith("[")) {
-          try {
-            const parsed = JSON.parse(w.images);
-            if (Array.isArray(parsed)) resolvedImages = parsed.filter(Boolean);
-          } catch {
-            resolvedImages = [];
-          }
-        }
-        if (resolvedImages.length === 0) {
-          resolvedImages = [primaryImage];
-        }
+        const { description, images } = extractImagesAndDescription(w.description, w.images, w.image_url);
 
         return {
           id: w.id,
           categoryId: w.category_id,
           categoryName: catMap.get(w.category_id) || "Kerajinan",
           title: w.title,
-          description: w.description,
-          imageUrl: resolvedImages[0] || primaryImage,
-          images: resolvedImages,
+          description,
+          imageUrl: images[0] || w.image_url || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80",
+          images,
           buyLink: w.buy_link,
           shopeeUrl: w.shopee_url,
           tiktokShopUrl: w.tiktok_shop_url,
@@ -524,28 +555,16 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
       if (search) filtered = filtered.filter((w) => w.title.toLowerCase().includes(search.toLowerCase()));
 
       return filtered.map((w) => {
-        const primaryImage = w.imageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
-        let resolvedImages: string[] = [];
-        if (w.images) {
-          try {
-            const parsed = JSON.parse(w.images);
-            if (Array.isArray(parsed)) resolvedImages = parsed.filter(Boolean);
-          } catch {
-            resolvedImages = [];
-          }
-        }
-        if (resolvedImages.length === 0) {
-          resolvedImages = [primaryImage];
-        }
+        const { description, images } = extractImagesAndDescription(w.description, w.images, w.imageUrl);
 
         return {
           id: w.id,
           categoryId: w.categoryId,
           categoryName: catMap.get(w.categoryId) || "Kerajinan",
           title: w.title,
-          description: w.description,
-          imageUrl: resolvedImages[0] || primaryImage,
-          images: resolvedImages,
+          description,
+          imageUrl: images[0] || w.imageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80",
+          images,
           buyLink: w.buyLink,
           shopeeUrl: w.shopeeUrl || undefined,
           tiktokShopUrl: w.tiktokShopUrl || undefined,
@@ -572,6 +591,7 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
     : (work.imageUrl ? [work.imageUrl] : []);
   const mainImage = allImages[0] || work.imageUrl || (work as any).image_url || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
   const imagesJson = JSON.stringify(allImages.length > 0 ? allImages : [mainImage]);
+  const encodedDesc = encodeDescriptionWithImages(work.description || "", allImages);
 
   if (supabase) {
     const catId = Number(work.categoryId) || 1;
@@ -587,7 +607,7 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
     const insertPayload: Record<string, any> = {
       category_id: catId,
       title: work.title || "Karya Baru",
-      description: work.description || "",
+      description: encodedDesc,
       image_url: mainImage,
       images: imagesJson,
       buy_link: work.buyLink || work.shopeeUrl || "https://shopee.co.id/nomorecraft",
@@ -598,9 +618,19 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
       is_featured: work.isFeatured !== undefined ? Boolean(work.isFeatured) : true,
     };
 
-    const { error } = await supabase.from("works").insert([insertPayload]);
+    let { error } = await supabase.from("works").insert([insertPayload]);
     if (error) {
-      console.error("Supabase createWork error:", error);
+      console.warn("Supabase createWork initial attempt error:", error.message);
+      // If error is caused by missing images column, retry without images field
+      if (error.message?.includes("images") || error.code === "42703" || error.code === "PGRST204") {
+        delete insertPayload.images;
+        const retry = await supabase.from("works").insert([insertPayload]);
+        if (retry.error) {
+          console.error("Supabase createWork retry error:", retry.error);
+          return false;
+        }
+        return true;
+      }
       return false;
     }
     return true;
@@ -610,7 +640,7 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
     await db.insert(worksTable).values({
       categoryId: Number(work.categoryId) || 1,
       title: work.title!,
-      description: work.description || "",
+      description: encodedDesc,
       imageUrl: mainImage,
       images: imagesJson,
       buyLink: work.buyLink || work.shopeeUrl || "https://shopee.co.id/nomorecraft",
@@ -635,7 +665,10 @@ export async function updateWork(id: number, work: Partial<Work>): Promise<boole
     const payload: Record<string, any> = {};
     if (work.categoryId !== undefined) payload.category_id = Number(work.categoryId);
     if (work.title !== undefined) payload.title = work.title;
-    if (work.description !== undefined) payload.description = work.description;
+    if (work.description !== undefined || allImages !== undefined) {
+      const desc = work.description !== undefined ? work.description : "";
+      payload.description = encodeDescriptionWithImages(desc, allImages);
+    }
     if (mainImage !== undefined) payload.image_url = mainImage;
     else if ((work as any).image_url !== undefined) payload.image_url = (work as any).image_url;
     if (allImages !== undefined) payload.images = JSON.stringify(allImages);
@@ -650,21 +683,31 @@ export async function updateWork(id: number, work: Partial<Work>): Promise<boole
     }
     if (work.isFeatured !== undefined) payload.is_featured = Boolean(work.isFeatured);
 
-    const { error } = await supabase.from("works").update(payload).eq("id", id);
+    let { error } = await supabase.from("works").update(payload).eq("id", id);
     if (error) {
-      console.error("Supabase updateWork error:", error);
+      console.warn("Supabase updateWork initial attempt error:", error.message);
+      if (error.message?.includes("images") || error.code === "42703" || error.code === "PGRST204") {
+        delete payload.images;
+        const retry = await supabase.from("works").update(payload).eq("id", id);
+        if (retry.error) {
+          console.error("Supabase updateWork retry error:", retry.error);
+          return false;
+        }
+        return true;
+      }
       return false;
     }
     return true;
   }
 
   try {
+    const desc = work.description !== undefined ? encodeDescriptionWithImages(work.description, allImages) : undefined;
     await db
       .update(worksTable)
       .set({
         categoryId: work.categoryId !== undefined ? Number(work.categoryId) : undefined,
         title: work.title,
-        description: work.description,
+        description: desc,
         imageUrl: mainImage,
         images: allImages !== undefined ? JSON.stringify(allImages) : undefined,
         buyLink: work.buyLink,
