@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Plus, Trash2, Camera, ArrowLeft, Image as ImageIcon, Check } from "lucide-react";
 import Link from "next/link";
+import SafeImage from "@/components/SafeImage";
 
 interface Photo {
   id: number;
@@ -190,7 +191,7 @@ export default function AdminFotoKegiatanPage() {
               >
                 <div>
                   <div className="aspect-[16/10] bg-zinc-800 relative">
-                    <img src={photo.imageUrl} alt={photo.title} className="w-full h-full object-cover" />
+                    <SafeImage src={photo.imageUrl} alt={photo.title} className="w-full h-full object-cover" />
                     <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-black/60 text-white backdrop-blur-md">
                       {photo.category}
                     </span>

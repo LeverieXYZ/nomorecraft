@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MOCK_SETTINGS, SiteSettings } from "@/data/mockData";
 import { Heart, Sparkles, Target, Compass, MessageCircle } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 export default function AboutSection() {
   const [settings, setSettings] = useState<SiteSettings>(MOCK_SETTINGS);
@@ -39,7 +40,7 @@ export default function AboutSection() {
               
               {/* Main Photo */}
               <div className="relative rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-800 aspect-[4/3]">
-                <img
+                <SafeImage
                   src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80"
                   alt="Proses Pembuatan Kerajinan"
                   className="w-full h-full object-cover"
@@ -55,14 +56,14 @@ export default function AboutSection() {
               {/* Grid 2 Photos */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-2xl overflow-hidden shadow-md border-2 border-white dark:border-zinc-800 aspect-square">
-                  <img
+                  <SafeImage
                     src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=500&q=80"
                     alt="Detail Rajutan Crochet"
                     className="w-full h-full object-cover hover:scale-105 transition-transform"
                   />
                 </div>
                 <div className="rounded-2xl overflow-hidden shadow-md border-2 border-white dark:border-zinc-800 aspect-square">
-                  <img
+                  <SafeImage
                     src="https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=500&q=80"
                     alt="Pipe Cleaner Bouquet"
                     className="w-full h-full object-cover hover:scale-105 transition-transform"

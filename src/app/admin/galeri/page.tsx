@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
-import ImageUploadInput from "@/components/ImageUploadInput";
+import MultiImageUploadInput from "@/components/MultiImageUploadInput";
+import SafeImage from "@/components/SafeImage";
 import { MOCK_CATEGORIES, Work, Category } from "@/data/mockData";
 import {
   Plus,
@@ -17,6 +18,7 @@ import {
   PackageCheck,
   Clock,
   Ban,
+  Images,
 } from "lucide-react";
 
 export default function AdminKelolaGaleriPage() {
@@ -33,7 +35,7 @@ export default function AdminKelolaGaleriPage() {
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState(1);
   const [price, setPrice] = useState("Rp 45.000");
-  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [shopeeUrl, setShopeeUrl] = useState("https://shopee.co.id/nomorecraft");
   const [tiktokShopUrl, setTiktokShopUrl] = useState("https://tiktok.com/@nomorecraft");
@@ -69,7 +71,7 @@ export default function AdminKelolaGaleriPage() {
     setTitle("");
     setCategoryId(1);
     setPrice("Rp 45.000");
-    setImageUrl("");
+    setImages([]);
     setDescription("");
     setShopeeUrl("https://shopee.co.id/nomorecraft");
     setTiktokShopUrl("https://tiktok.com/@nomorecraft");
@@ -83,7 +85,8 @@ export default function AdminKelolaGaleriPage() {
     setTitle(work.title);
     setCategoryId(work.categoryId);
     setPrice(work.price);
-    setImageUrl(work.imageUrl);
+    const workImgs = work.images && work.images.length > 0 ? work.images : work.imageUrl ? [work.imageUrl] : [];
+    setImages(workImgs);
     setDescription(work.description);
     setShopeeUrl(work.shopeeUrl || "https://shopee.co.id/nomorecraft");
     setTiktokShopUrl(work.tiktokShopUrl || "https://tiktok.com/@nomorecraft");
@@ -95,9 +98,13 @@ export default function AdminKelolaGaleriPage() {
 
   const handleSaveWork = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !imageUrl) return;
+    if (!title || images.length === 0) {
+      alert("Mohon lengkapi judul karya dan unggah minimal 1 foto!");
+      return;
+    }
 
     const isSold = stockStatus === "Sold Out";
+    const primaryImage = images[0];
 
     if (editingWork) {
       // UPDATE existing work
@@ -106,7 +113,8 @@ export default function AdminKelolaGaleriPage() {
         title,
         categoryId: Number(categoryId),
         price,
-        imageUrl,
+        imageUrl: primaryImage,
+        images,
         description,
         shopeeUrl,
         tiktokShopUrl,
@@ -122,7 +130,7 @@ export default function AdminKelolaGaleriPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        setSavedSuccess("Detail karya berhasil diperbarui di Supabase database!");
+        setSavedSuccess("Detail karya & foto galeri berhasil diperbarui di Supabase!");
         resetForm();
         await loadData();
       } catch (err) {
@@ -134,7 +142,8 @@ export default function AdminKelolaGaleriPage() {
         categoryId: Number(categoryId),
         title,
         description,
-        imageUrl,
+        imageUrl: primaryImage,
+        images,
         buyLink: shopeeUrl,
         shopeeUrl,
         tiktokShopUrl,
@@ -196,7 +205,7 @@ export default function AdminKelolaGaleriPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white">CMS Kelola Galeri Karya</h1>
             <p className="text-sm text-zinc-400">
-              Tambah, edit detail/harga, tag status stok (Ready Stock / Pre-Order / Sold Out), upload foto, dan kelola karya di Supabase database.
+              Tambah multiple foto karya (mode carousel), edit detail/harga, tag status stok (Ready Stock / Pre-Order / Sold Out), dan kelola di Supabase database.
             </p>
           </div>
 
@@ -211,7 +220,7 @@ export default function AdminKelolaGaleriPage() {
         {/* Create / Edit Form */}
         <form
           onSubmit={handleSaveWork}
-          className={`p-6 sm:p-8 rounded-3xl border transition-all space-y-5 ${
+          className={`p-6 sm:p-8 rounded-3xl border transition-all space-y-6 ${
             editingWork
               ? "bg-rose-950/30 border-rose-500/60 shadow-lg"
               : "bg-zinc-900 border-zinc-800"
@@ -285,12 +294,13 @@ export default function AdminKelolaGaleriPage() {
             </div>
           </div>
 
-          {/* Upload / Image Input for Galeri */}
-          <ImageUploadInput
-            label="Foto Karya HD"
-            value={imageUrl}
-            onChange={setImageUrl}
+          {/* Multiple Image Upload Component with Compression & Cover selector */}
+          <MultiImageUploadInput
+            label="Foto Karya (Bisa Lebih Dari 1 Foto untuk Mode Carousel)"
+            values={images}
+            onChange={setImages}
             required={true}
+            maxImages={8}
           />
 
           <div>
@@ -469,6 +479,8 @@ export default function AdminKelolaGaleriPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredWorks.map((w) => {
                 const itemStatus = w.stockStatus || (w.isSold ? "Sold Out" : "Ready Stock");
+                const totalPhotos = w.images && w.images.length > 0 ? w.images.length : 1;
+
                 return (
                   <div
                     key={w.id}
@@ -476,7 +488,7 @@ export default function AdminKelolaGaleriPage() {
                   >
                     <div>
                       <div className="aspect-[4/3] bg-zinc-950 relative">
-                        <img
+                        <SafeImage
                           src={w.imageUrl}
                           alt={w.title}
                           className="w-full h-full object-cover"
@@ -510,6 +522,14 @@ export default function AdminKelolaGaleriPage() {
                             </span>
                           )}
                         </div>
+
+                        {/* Multi-Image Badge */}
+                        {totalPhotos > 1 && (
+                          <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/75 text-white backdrop-blur-md flex items-center gap-1 border border-white/10">
+                            <Images className="w-3.5 h-3.5 text-rose-400" />
+                            <span>{totalPhotos} Foto</span>
+                          </div>
+                        )}
                       </div>
                       <div className="p-5 space-y-1">
                         <h3 className="text-base font-bold text-white">{w.title}</h3>

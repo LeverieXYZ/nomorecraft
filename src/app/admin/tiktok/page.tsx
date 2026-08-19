@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
+import SafeImage from "@/components/SafeImage";
 import { TikTokVideo } from "@/data/mockData";
 import { Plus, Trash2, Video, Check, Star } from "lucide-react";
 
@@ -180,7 +181,7 @@ export default function AdminKelolaTikTokPage() {
                 <div key={v.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="aspect-[16/10] bg-zinc-950 relative">
-                      <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
+                      <SafeImage src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
                       {v.isFeatured && (
                         <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-950">
                           Unggulan ✨

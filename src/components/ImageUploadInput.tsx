@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { Upload, Link as LinkIcon, Image as ImageIcon, X, Check } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 interface ImageUploadInputProps {
   label: string;
@@ -20,26 +21,62 @@ export default function ImageUploadInput({
 }: ImageUploadInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"file" | "url">(value.startsWith("data:") ? "file" : "url");
+  const [activeTab, setActiveTab] = useState<"file" | "url">(value?.startsWith("data:") ? "file" : "url");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress image on canvas to prevent large database payload errors (5MB -> ~60KB)
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 900;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          // Compress to JPEG with 0.82 quality
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => reject(new Error("Failed to load image for compression"));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        onChange(result);
-      }
+    try {
+      const compressedUrl = await compressImage(file);
+      onChange(compressedUrl);
+    } catch (err) {
+      console.error("Error processing image file:", err);
+    } finally {
       setIsUploading(false);
-    };
-    reader.onerror = (err) => {
-      console.error("Error reading image file:", err);
-      setIsUploading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleClear = () => {
@@ -128,15 +165,15 @@ export default function ImageUploadInput({
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-dashed border-zinc-600 text-sm font-semibold text-zinc-300 transition-colors"
           >
             <Upload className="w-4 h-4 text-rose-400" />
-            <span>{isUploading ? "Mengunggah..." : "Pilih File Gambar dari Komputer"}</span>
+            <span>{isUploading ? "Mengompres & Memproses..." : "Pilih File Gambar dari Komputer"}</span>
           </button>
         </div>
       )}
 
-      {/* Image Preview Container */}
+      {/* Image Preview Container with SafeImage */}
       {value && (
         <div className="mt-2 relative rounded-xl overflow-hidden border border-zinc-700 bg-zinc-950 aspect-[16/9] max-h-40 flex items-center justify-center group">
-          <img
+          <SafeImage
             src={value}
             alt="Preview Upload"
             className="w-full h-full object-cover"

@@ -38,6 +38,7 @@ export const works = sqliteTable("works", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url").notNull(),
+  images: text("images"),
   buyLink: text("buy_link").notNull(),
   shopeeUrl: text("shopee_url"),
   tiktokShopUrl: text("tiktok_shop_url"),

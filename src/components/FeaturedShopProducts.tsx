@@ -3,6 +3,7 @@
 import React from "react";
 import { MOCK_SHOP_PRODUCTS } from "@/data/mockData";
 import { ShoppingCart, ExternalLink, Sparkles, CheckCircle2 } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 export default function FeaturedShopProducts() {
   return (
@@ -24,7 +25,7 @@ export default function FeaturedShopProducts() {
           >
             <div>
               <div className="aspect-[4/3] overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
-                <img src={prod.imageUrl} alt={prod.name} className="w-full h-full object-cover" />
+                <SafeImage src={prod.imageUrl} alt={prod.name} className="w-full h-full object-cover" />
                 <div className="absolute top-3 left-3 flex gap-1.5">
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />

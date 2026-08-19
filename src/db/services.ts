@@ -477,13 +477,31 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
       return data.map((w: any) => {
         const isSoldBool = Boolean(w.is_sold);
         const resolvedStatus = (w.stock_status || (isSoldBool ? "Sold Out" : "Ready Stock")) as "Ready Stock" | "Pre-Order" | "Sold Out";
+        const primaryImage = w.image_url || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
+        
+        let resolvedImages: string[] = [];
+        if (Array.isArray(w.images)) {
+          resolvedImages = w.images.filter(Boolean);
+        } else if (typeof w.images === "string" && w.images.trim().startsWith("[")) {
+          try {
+            const parsed = JSON.parse(w.images);
+            if (Array.isArray(parsed)) resolvedImages = parsed.filter(Boolean);
+          } catch {
+            resolvedImages = [];
+          }
+        }
+        if (resolvedImages.length === 0) {
+          resolvedImages = [primaryImage];
+        }
+
         return {
           id: w.id,
           categoryId: w.category_id,
           categoryName: catMap.get(w.category_id) || "Kerajinan",
           title: w.title,
           description: w.description,
-          imageUrl: w.image_url,
+          imageUrl: resolvedImages[0] || primaryImage,
+          images: resolvedImages,
           buyLink: w.buy_link,
           shopeeUrl: w.shopee_url,
           tiktokShopUrl: w.tiktok_shop_url,
@@ -505,22 +523,39 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
       if (categoryId) filtered = filtered.filter((w) => w.categoryId === categoryId);
       if (search) filtered = filtered.filter((w) => w.title.toLowerCase().includes(search.toLowerCase()));
 
-      return filtered.map((w) => ({
-        id: w.id,
-        categoryId: w.categoryId,
-        categoryName: catMap.get(w.categoryId) || "Kerajinan",
-        title: w.title,
-        description: w.description,
-        imageUrl: w.imageUrl,
-        buyLink: w.buyLink,
-        shopeeUrl: w.shopeeUrl || undefined,
-        tiktokShopUrl: w.tiktokShopUrl || undefined,
-        price: w.price,
-        isSold: Boolean(w.isSold),
-        stockStatus: (w.isSold ? "Sold Out" : "Ready Stock") as "Ready Stock" | "Pre-Order" | "Sold Out",
-        isFeatured: Boolean(w.isFeatured),
-        createdAt: w.createdAt || undefined,
-      }));
+      return filtered.map((w) => {
+        const primaryImage = w.imageUrl || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
+        let resolvedImages: string[] = [];
+        if (w.images) {
+          try {
+            const parsed = JSON.parse(w.images);
+            if (Array.isArray(parsed)) resolvedImages = parsed.filter(Boolean);
+          } catch {
+            resolvedImages = [];
+          }
+        }
+        if (resolvedImages.length === 0) {
+          resolvedImages = [primaryImage];
+        }
+
+        return {
+          id: w.id,
+          categoryId: w.categoryId,
+          categoryName: catMap.get(w.categoryId) || "Kerajinan",
+          title: w.title,
+          description: w.description,
+          imageUrl: resolvedImages[0] || primaryImage,
+          images: resolvedImages,
+          buyLink: w.buyLink,
+          shopeeUrl: w.shopeeUrl || undefined,
+          tiktokShopUrl: w.tiktokShopUrl || undefined,
+          price: w.price,
+          isSold: Boolean(w.isSold),
+          stockStatus: (w.isSold ? "Sold Out" : "Ready Stock") as "Ready Stock" | "Pre-Order" | "Sold Out",
+          isFeatured: Boolean(w.isFeatured),
+          createdAt: w.createdAt || undefined,
+        };
+      });
     }
   } catch (err) {}
 
@@ -532,6 +567,12 @@ export async function fetchWorks(categoryId?: number, search?: string): Promise<
 
 export async function createWork(work: Partial<Work>): Promise<boolean> {
   const supabase = getSupabase();
+  const allImages = (work.images && work.images.length > 0)
+    ? work.images
+    : (work.imageUrl ? [work.imageUrl] : []);
+  const mainImage = allImages[0] || work.imageUrl || (work as any).image_url || "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80";
+  const imagesJson = JSON.stringify(allImages.length > 0 ? allImages : [mainImage]);
+
   if (supabase) {
     const catId = Number(work.categoryId) || 1;
     await supabase.from("categories").upsert({
@@ -543,11 +584,12 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
     });
 
     const isSoldFinal = work.stockStatus === "Sold Out" || Boolean(work.isSold);
-    const insertPayload = {
+    const insertPayload: Record<string, any> = {
       category_id: catId,
       title: work.title || "Karya Baru",
       description: work.description || "",
-      image_url: work.imageUrl || (work as any).image_url || "",
+      image_url: mainImage,
+      images: imagesJson,
       buy_link: work.buyLink || work.shopeeUrl || "https://shopee.co.id/nomorecraft",
       shopee_url: work.shopeeUrl || "https://shopee.co.id/nomorecraft",
       tiktok_shop_url: work.tiktokShopUrl || "https://tiktok.com/@nomorecraft",
@@ -569,7 +611,8 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
       categoryId: Number(work.categoryId) || 1,
       title: work.title!,
       description: work.description || "",
-      imageUrl: work.imageUrl || "",
+      imageUrl: mainImage,
+      images: imagesJson,
       buyLink: work.buyLink || work.shopeeUrl || "https://shopee.co.id/nomorecraft",
       shopeeUrl: work.shopeeUrl,
       tiktokShopUrl: work.tiktokShopUrl,
@@ -585,13 +628,17 @@ export async function createWork(work: Partial<Work>): Promise<boolean> {
 
 export async function updateWork(id: number, work: Partial<Work>): Promise<boolean> {
   const supabase = getSupabase();
+  const allImages = work.images;
+  const mainImage = allImages && allImages.length > 0 ? allImages[0] : work.imageUrl;
+
   if (supabase) {
     const payload: Record<string, any> = {};
     if (work.categoryId !== undefined) payload.category_id = Number(work.categoryId);
     if (work.title !== undefined) payload.title = work.title;
     if (work.description !== undefined) payload.description = work.description;
-    if (work.imageUrl !== undefined) payload.image_url = work.imageUrl;
+    if (mainImage !== undefined) payload.image_url = mainImage;
     else if ((work as any).image_url !== undefined) payload.image_url = (work as any).image_url;
+    if (allImages !== undefined) payload.images = JSON.stringify(allImages);
     if (work.buyLink !== undefined) payload.buy_link = work.buyLink;
     if (work.shopeeUrl !== undefined) payload.shopee_url = work.shopeeUrl;
     if (work.tiktokShopUrl !== undefined) payload.tiktok_shop_url = work.tiktokShopUrl;
@@ -618,7 +665,8 @@ export async function updateWork(id: number, work: Partial<Work>): Promise<boole
         categoryId: work.categoryId !== undefined ? Number(work.categoryId) : undefined,
         title: work.title,
         description: work.description,
-        imageUrl: work.imageUrl,
+        imageUrl: mainImage,
+        images: allImages !== undefined ? JSON.stringify(allImages) : undefined,
         buyLink: work.buyLink,
         shopeeUrl: work.shopeeUrl,
         tiktokShopUrl: work.tiktokShopUrl,

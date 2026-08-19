@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_BLOG_POSTS, MOCK_BLOG_CATEGORIES, BlogPost } from "@/data/mockData";
 import { BookOpen, Calendar, Clock, ArrowRight, Search, X } from "lucide-react";
+import SafeImage from "@/components/SafeImage";
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>(MOCK_BLOG_POSTS);
@@ -107,7 +108,7 @@ export default function BlogPage() {
             >
               <div>
                 <div className="relative aspect-[16/10] overflow-hidden bg-rose-50 dark:bg-zinc-800">
-                  <img
+                  <SafeImage
                     src={post.coverImageUrl}
                     alt={post.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -159,7 +160,7 @@ export default function BlogPage() {
               <X className="w-5 h-5" />
             </button>
             <div className="aspect-[21/9] bg-rose-50 dark:bg-zinc-800 relative">
-              <img
+              <SafeImage
                 src={activeArticle.coverImageUrl}
                 alt={activeArticle.title}
                 className="w-full h-full object-cover"

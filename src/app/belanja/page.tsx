@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_SHOP_PRODUCTS, ShopProduct } from "@/data/mockData";
-import { ShoppingBag, ExternalLink, ShoppingCart, Search, Eye, X } from "lucide-react";
+import { Sparkles, ShoppingBag, Video, ExternalLink, Search, Check, Filter, X, Eye, ShoppingCart } from "lucide-react";
 import ModalPortal from "@/components/ModalPortal";
+import SafeImage from "@/components/SafeImage";
 
 export default function BelanjaPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -114,7 +115,7 @@ export default function BelanjaPage() {
             >
               <div>
                 <div className="aspect-[4/3] overflow-hidden bg-orange-50 dark:bg-zinc-800 relative">
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <SafeImage src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs z-10">
                     {product.stockStatus}
                   </span>
@@ -190,7 +191,7 @@ export default function BelanjaPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 max-h-[85vh] overflow-y-auto">
                 <div className="bg-rose-50 dark:bg-zinc-800 flex items-center justify-center p-3">
-                  <img
+                  <SafeImage
                     src={activeModalProduct.imageUrl}
                     alt={activeModalProduct.name}
                     className="max-h-[220px] sm:max-h-[280px] w-full object-contain rounded-2xl"

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
 import ImageUploadInput from "@/components/ImageUploadInput";
+import SafeImage from "@/components/SafeImage";
 import { HeroBanner } from "@/data/mockData";
 import {
   Save,
@@ -374,7 +375,7 @@ export default function AdminKelolaBerandaPage() {
                 <div key={b.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-md flex flex-col justify-between">
                   <div>
                     <div className="aspect-[21/9] bg-zinc-950 relative overflow-hidden">
-                      <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-85" />
+                      <SafeImage src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-85" />
                       <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md">
                         <TagIcon className="w-3 h-3" />
                         <span>{b.tag || b.badgeText || "Promo"}</span>

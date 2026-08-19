@@ -53,12 +53,14 @@ CREATE TABLE IF NOT EXISTS works (
   price TEXT NOT NULL,
   is_sold BOOLEAN NOT NULL DEFAULT false,
   stock_status TEXT NOT NULL DEFAULT 'Ready Stock',
+  images TEXT,
   is_featured BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Ensure stock_status column exists on existing tables
+-- Ensure stock_status & images columns exist on existing tables
 ALTER TABLE works ADD COLUMN IF NOT EXISTS stock_status TEXT DEFAULT 'Ready Stock';
+ALTER TABLE works ADD COLUMN IF NOT EXISTS images TEXT;
 
 -- 5. Blog Categories
 CREATE TABLE IF NOT EXISTS blog_categories (

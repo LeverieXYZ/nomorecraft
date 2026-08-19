@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MOCK_SETTINGS, HeroBanner } from "@/data/mockData";
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Heart, Award, ShieldCheck } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 export default function HeroSection() {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
@@ -158,7 +159,7 @@ export default function HeroSection() {
               
               {/* Image Container */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-zinc-800 aspect-[4/3] sm:aspect-square">
-                <img
+                <SafeImage
                   src={banner.imageUrl}
                   alt={banner.title}
                   className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"

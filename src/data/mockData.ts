@@ -25,6 +25,7 @@ export interface Work {
   title: string;
   description: string;
   imageUrl: string;
+  images?: string[];
   buyLink: string;
   shopeeUrl?: string;
   tiktokShopUrl?: string;
@@ -176,6 +177,11 @@ export const MOCK_WORKS: Work[] = [
     title: "Coquette Pearl Press-on Nails",
     description: "Desain serba pita dan mutiara bernuansa baby pink yang manis & girly.",
     imageUrl: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80",
+    ],
     buyLink: "https://shopee.co.id",
     shopeeUrl: "https://shopee.co.id",
     tiktokShopUrl: "https://tiktok.com",
@@ -192,6 +198,10 @@ export const MOCK_WORKS: Work[] = [
     title: "Emerald Cat-Eye Chrome Nails",
     description: "Efek shimmer magnetik cat-eye hijau zamrud dengan aksen silver chrome mewah.",
     imageUrl: "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80",
+    ],
     buyLink: "https://shopee.co.id",
     shopeeUrl: "https://shopee.co.id",
     tiktokShopUrl: "https://tiktok.com",
@@ -208,6 +218,11 @@ export const MOCK_WORKS: Work[] = [
     title: "Sunflower & Tulip Pastel Bouquet",
     description: "Buket bunga matahari dan tulip dari kawat bulu halus lengkap dengan pembungkus aesthetic.",
     imageUrl: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+    ],
     buyLink: "https://shopee.co.id",
     shopeeUrl: "https://shopee.co.id",
     tiktokShopUrl: "https://tiktok.com",
@@ -224,6 +239,10 @@ export const MOCK_WORKS: Work[] = [
     title: "Cute Pipe Cleaner Desk Plant Pot",
     description: "Pot kaktus mini imut dari kawat bulu, menghias meja belajar tanpa perlu disiram.",
     imageUrl: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80",
+    ],
     buyLink: "https://shopee.co.id",
     shopeeUrl: "https://shopee.co.id",
     tiktokShopUrl: "https://tiktok.com",
@@ -237,15 +256,19 @@ export const MOCK_WORKS: Work[] = [
     id: 5,
     categoryId: 3,
     categoryName: "Crochet",
-    title: "Strawberry Chunky Crochet Bag",
-    description: "Tas tangan rajut berbenang katun tebal dengan liontin stoberi yang menggemaskan.",
+    title: "Strawberry Blossom Crochet Tote Bag",
+    description: "Tas rajut granny square motif buah stroberi aesthetic, muat botol minum & dompet.",
     imageUrl: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80",
+    ],
     buyLink: "https://shopee.co.id",
     shopeeUrl: "https://shopee.co.id",
     tiktokShopUrl: "https://tiktok.com",
     price: "Rp 120.000",
     isSold: false,
-    stockStatus: "Pre-Order",
+    stockStatus: "Ready Stock",
     isFeatured: true,
     createdAt: "2026-08-03",
   },
@@ -253,17 +276,21 @@ export const MOCK_WORKS: Work[] = [
     id: 6,
     categoryId: 3,
     categoryName: "Crochet",
-    title: "Matcha Frog Crochet Keychain",
-    description: "Gantungan kunci katak hijau matcha imut buatan tangan 100% benang milk cotton.",
+    title: "Pastel Daisy Keychain Set",
+    description: "Gantungan kunci rajut bunga aster warna pastel cantik untuk tas atau kunci motor.",
     imageUrl: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+    ],
     buyLink: "https://shopee.co.id",
     shopeeUrl: "https://shopee.co.id",
     tiktokShopUrl: "https://tiktok.com",
-    price: "Rp 28.000",
+    price: "Rp 25.000",
     isSold: true,
     stockStatus: "Sold Out",
     isFeatured: false,
-    createdAt: "2026-08-08",
+    createdAt: "2026-08-04",
   },
 ];
 

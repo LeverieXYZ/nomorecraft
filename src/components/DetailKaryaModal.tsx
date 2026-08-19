@@ -3,6 +3,7 @@
 import React from "react";
 import { Work, MOCK_SETTINGS } from "@/data/mockData";
 import { X, ShoppingCart, ExternalLink, MessageCircle, Sparkles } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 interface DetailKaryaModalProps {
   work: Work | null;
@@ -27,7 +28,7 @@ export default function DetailKaryaModal({ work, onClose }: DetailKaryaModalProp
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Image */}
           <div className="aspect-[4/3] bg-rose-50 dark:bg-zinc-800 relative overflow-hidden">
-            <img
+            <SafeImage
               src={work.imageUrl}
               alt={work.title}
               className="w-full h-full object-cover"

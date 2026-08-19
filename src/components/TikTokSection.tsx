@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MOCK_TIKTOK_VIDEOS, TikTokVideo } from "@/data/mockData";
 import { Play, ExternalLink, Video, Sparkles } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 export default function TikTokSection() {
   const [videos, setVideos] = useState<TikTokVideo[]>(MOCK_TIKTOK_VIDEOS);
@@ -61,7 +62,7 @@ export default function TikTokSection() {
           {/* Main Video Embed / Preview */}
           <div className="lg:col-span-7 bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 relative group">
             <div className="aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center">
-              <img
+              <SafeImage
                 src={activeVideo.thumbnailUrl}
                 alt={activeVideo.title}
                 className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
@@ -124,7 +125,7 @@ export default function TikTokSection() {
                     }`}
                   >
                     <div className="w-20 h-14 rounded-xl overflow-hidden bg-zinc-800 relative shrink-0">
-                      <img
+                      <SafeImage
                         src={vid.thumbnailUrl}
                         alt={vid.title}
                         className="w-full h-full object-cover"

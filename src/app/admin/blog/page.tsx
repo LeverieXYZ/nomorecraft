@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AdminSidebar from "@/components/AdminSidebar";
+import SafeImage from "@/components/SafeImage";
 import { MOCK_BLOG_POSTS, MOCK_BLOG_CATEGORIES, BlogPost } from "@/data/mockData";
 import { Plus, Trash2, BookOpen, Check } from "lucide-react";
 
@@ -194,7 +195,7 @@ export default function AdminKelolaBlogPage() {
                 <div key={p.id} className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between">
                   <div>
                     <div className="aspect-[16/10] bg-zinc-950 relative">
-                      <img src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover" />
+                      <SafeImage src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover" />
                       <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-purple-600 text-white">
                         {p.categoryName || "Tutorial"}
                       </span>

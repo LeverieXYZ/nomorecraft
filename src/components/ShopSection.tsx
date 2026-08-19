@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { MOCK_SHOP_PRODUCTS, MOCK_SHOP_LINKS, ShopProduct } from "@/data/mockData";
-import { ShoppingBag, ExternalLink, ShoppingCart, Sparkles, Eye, X } from "lucide-react";
+import { ShoppingBag, ExternalLink, ShoppingCart, Video, Sparkles, Check, Heart, Eye, X } from "lucide-react";
 import ModalPortal from "./ModalPortal";
+import SafeImage from "./SafeImage";
 
 export default function ShopSection() {
   const [activeModalProduct, setActiveModalProduct] = useState<ShopProduct | null>(null);
@@ -101,7 +102,7 @@ export default function ShopSection() {
               >
                 <div className="space-y-3">
                   <div className="aspect-square rounded-2xl overflow-hidden bg-rose-50 dark:bg-zinc-800 relative">
-                    <img
+                    <SafeImage
                       src={prod.imageUrl}
                       alt={prod.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -221,7 +222,7 @@ export default function ShopSection() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 max-h-[85vh] overflow-y-auto">
                 <div className="bg-rose-50 dark:bg-zinc-800 flex items-center justify-center p-3">
-                  <img
+                  <SafeImage
                     src={activeModalProduct.imageUrl}
                     alt={activeModalProduct.name}
                     className="max-h-[220px] sm:max-h-[280px] w-full object-contain rounded-2xl"

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { MOCK_BLOG_POSTS, BlogPost } from "@/data/mockData";
 import { Sparkles, BookOpen, Clock, Calendar, ArrowRight, X } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 export default function BlogSection() {
   const [activeArticle, setActiveArticle] = useState<BlogPost | null>(null);
@@ -38,7 +39,7 @@ export default function BlogSection() {
               <div>
                 {/* Cover Image */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-rose-50 dark:bg-zinc-800">
-                  <img
+                  <SafeImage
                     src={post.coverImageUrl}
                     alt={post.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -96,7 +97,7 @@ export default function BlogSection() {
             </button>
 
             <div className="aspect-[21/9] bg-rose-50 dark:bg-zinc-800 relative">
-              <img
+              <SafeImage
                 src={activeArticle.coverImageUrl}
                 alt={activeArticle.title}
                 className="w-full h-full object-cover"
@@ -137,7 +138,7 @@ export default function BlogSection() {
                       onClick={() => setActiveArticle(rel)}
                       className="cursor-pointer p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 hover:bg-rose-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center gap-3 transition-colors"
                     >
-                      <img
+                      <SafeImage
                         src={rel.coverImageUrl}
                         alt={rel.title}
                         className="w-12 h-12 rounded-xl object-cover"
